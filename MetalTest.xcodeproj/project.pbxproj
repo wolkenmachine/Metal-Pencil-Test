@@ -13,6 +13,9 @@
 		1FE37AC52860ACA900DBE6F4 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1FE37AC32860ACA900DBE6F4 /* Main.storyboard */; };
 		1FE37AC72860ACAB00DBE6F4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1FE37AC62860ACAB00DBE6F4 /* Assets.xcassets */; };
 		1FE37ACA2860ACAB00DBE6F4 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1FE37AC82860ACAB00DBE6F4 /* LaunchScreen.storyboard */; };
+		1FE37AD22860B3E900DBE6F4 /* Renderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE37AD12860B3E900DBE6F4 /* Renderer.swift */; };
+		1FE37AD42860B61000DBE6F4 /* Shader.metal in Sources */ = {isa = PBXBuildFile; fileRef = 1FE37AD32860B61000DBE6F4 /* Shader.metal */; };
+		1FE37AD62860C7AB00DBE6F4 /* MultiGestureRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE37AD52860C7AB00DBE6F4 /* MultiGestureRecognizer.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,6 +27,9 @@
 		1FE37AC62860ACAB00DBE6F4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1FE37AC92860ACAB00DBE6F4 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		1FE37ACB2860ACAB00DBE6F4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		1FE37AD12860B3E900DBE6F4 /* Renderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Renderer.swift; sourceTree = "<group>"; };
+		1FE37AD32860B61000DBE6F4 /* Shader.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Shader.metal; sourceTree = "<group>"; };
+		1FE37AD52860C7AB00DBE6F4 /* MultiGestureRecognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiGestureRecognizer.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -59,6 +65,9 @@
 				1FE37ABD2860ACA900DBE6F4 /* AppDelegate.swift */,
 				1FE37ABF2860ACA900DBE6F4 /* SceneDelegate.swift */,
 				1FE37AC12860ACA900DBE6F4 /* ViewController.swift */,
+				1FE37AD12860B3E900DBE6F4 /* Renderer.swift */,
+				1FE37AD52860C7AB00DBE6F4 /* MultiGestureRecognizer.swift */,
+				1FE37AD32860B61000DBE6F4 /* Shader.metal */,
 				1FE37AC32860ACA900DBE6F4 /* Main.storyboard */,
 				1FE37AC62860ACAB00DBE6F4 /* Assets.xcassets */,
 				1FE37AC82860ACAB00DBE6F4 /* LaunchScreen.storyboard */,
@@ -138,8 +147,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1FE37AD22860B3E900DBE6F4 /* Renderer.swift in Sources */,
 				1FE37AC22860ACA900DBE6F4 /* ViewController.swift in Sources */,
 				1FE37ABE2860ACA900DBE6F4 /* AppDelegate.swift in Sources */,
+				1FE37AD62860C7AB00DBE6F4 /* MultiGestureRecognizer.swift in Sources */,
+				1FE37AD42860B61000DBE6F4 /* Shader.metal in Sources */,
 				1FE37AC02860ACA900DBE6F4 /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -289,6 +301,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 48U6235478;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MetalTest/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -316,6 +329,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 48U6235478;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MetalTest/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
