@@ -10,7 +10,7 @@ import MetalKit
 
 // Background color
 enum Colors {
-  static let background = MTLClearColor(red: 0.0, green: 0.4, blue: 0.2, alpha: 1.0)
+  static let background = MTLClearColor(red: 0.9921568627, green: 0.9882352941, blue: 0.9843137255, alpha: 1.0)
 }
 
 struct Vertex {
@@ -27,17 +27,20 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
   var commandQueue: MTLCommandQueue!
   var pipelineState: MTLRenderPipelineState?
   
+  var lastPoint = CGVector(dx: 0, dy: 0)
+  
+  var indexOffset: UInt16 = 2
   // Vertices & Indices
-  let verts: [Float] = [
-    -0.01,  0.01, 0,
-    -0.01, -0.01, 0,
-     0.01, -0.01, 0,
-     0.01,  0.01, 0,
+  var verts: [Float] = [
+     0,   1, 0,
+     0,   0, 0,
+     1, 0, 0,
+     1, 1, 0,
   ]
   
-  let indices: [UInt16] = [
+  var indices: [UInt16] = [
     0, 1, 2,
-    2, 3, 0
+    2, 3, 1
   ]
 
   var vertexBuffer: MTLBuffer?
@@ -45,13 +48,72 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
   
   // Constants
   struct Constants {
-    var x: Float = 0.0
-    var y: Float = 0.0
+    var screen_width: Float = Float(UIScreen.main.bounds.width)
+    var screen_height: Float = Float(UIScreen.main.bounds.height)
   }
   var constants = Constants()
   
   var time: Float = 0
   
+  func newLine(x: CGFloat, y: CGFloat){
+    print("new line")
+    let newPoint = CGVector(dx: x, dy: y)
+    
+    verts += [
+      Float(newPoint.dx), Float(newPoint.dy), 0,
+      Float(newPoint.dx), Float(newPoint.dy), 0,
+    ]
+    
+    // Ignore the first time in the buffer
+    //if(indexOffset != 0) {
+      indexOffset += 2
+    //}
+    
+    lastPoint = newPoint
+  }
+  
+  func addPoint(x: CGFloat, y: CGFloat){
+    let newPoint = CGVector(dx: x, dy: y)
+    let diff = (newPoint - lastPoint).normalized()*1 // line thickness
+    let left_offset = newPoint + diff.rotated90clockwise()
+    let right_offset = newPoint + diff.rotated90counterclockwise()
+    
+    verts += [
+      Float(right_offset.dx), Float(right_offset.dy), 0,
+      Float(left_offset.dx), Float(left_offset.dy), 0,
+    ]
+    
+    
+    indices += [
+      indexOffset+0, indexOffset+1, indexOffset+2,
+      indexOffset+2, indexOffset+3, indexOffset+1
+    ]
+    
+    indexOffset += 2
+    
+    lastPoint = newPoint
+  }
+  
+  func setPotentialFuturePoint(x: CGFloat, y: CGFloat) {
+    // Trick: use the first quad in the system to project forward into the future
+    let newPoint = CGVector(dx: x, dy: y)
+    let diff = (newPoint - lastPoint).normalized()*0.5 // line thickness
+    let left_offset = newPoint + diff.rotated90clockwise()
+    let right_offset = newPoint + diff.rotated90counterclockwise()
+    
+    verts[0] = Float(right_offset.dx)
+    verts[1] = Float(right_offset.dy)
+    verts[3] = Float(left_offset.dx)
+    verts[4] = Float(left_offset.dy)
+    
+    indices[3] = 0
+    indices[4] = 1
+    indices[5] = indexOffset+0
+    
+    indices[0] = indexOffset+0
+    indices[1] = indexOffset+1
+    indices[2] = 1
+  }
   
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -71,13 +133,12 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
     metalView.addGestureRecognizer(multiGestureRecognizer)
     
     metalView.preferredFramesPerSecond = 120
-    //metalView.enableSetNeedsDisplay = false
-    //metalView.CAMetalLayer.displaySyncEnabled = false
   }
   
   private func buildModel(){
-    vertexBuffer = device.makeBuffer(bytes: verts, length: verts.count * MemoryLayout<Float>.size, options: [])
-    indexBuffer = device.makeBuffer(bytes: indices, length: indices.count * MemoryLayout<UInt16>.size, options: [])
+    // TODO: size the buffer in some sane way
+    vertexBuffer = device.makeBuffer(bytes: verts, length: 4096*100, options: [])
+    indexBuffer = device.makeBuffer(bytes: indices, length: 4096*100, options: [])
   }
   
   private func buildPipelineState(){
@@ -106,6 +167,7 @@ extension ViewController: MTKViewDelegate {
     guard let drawable = view.currentDrawable,
           let pipelineState = pipelineState,
           let indexBuffer = indexBuffer,
+          let vertexBuffer = vertexBuffer,
           let descriptor = view.currentRenderPassDescriptor else {
             return
           }
@@ -121,6 +183,10 @@ extension ViewController: MTKViewDelegate {
     commandEncoder.setRenderPipelineState(pipelineState)
     
     // Actual draw calls
+    // Update buffers
+    vertexBuffer.contents().copyMemory(from: verts, byteCount: verts.count * MemoryLayout<Float>.stride)
+    indexBuffer.contents().copyMemory(from: indices, byteCount: indices.count * MemoryLayout<UInt16>.stride)
+    
     commandEncoder.setVertexBytes(&constants, length: MemoryLayout<Constants>.stride, index: 1)
     
     commandEncoder.setVertexBuffer(vertexBuffer, offset: 0, index: 0)

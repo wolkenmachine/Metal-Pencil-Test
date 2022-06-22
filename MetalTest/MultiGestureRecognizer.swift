@@ -96,6 +96,10 @@ class MultiGestureRecognizer: UIGestureRecognizer {
 
   public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
     //multipleTouchesToJSON(type: "began", touches: touches, event: event)
+    for touch in touches {
+      let location = touch.preciseLocation(in: view)
+      viewRef?.newLine(x: location.x, y: location.y)
+    }
   }
 
   public override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent) {
@@ -103,18 +107,22 @@ class MultiGestureRecognizer: UIGestureRecognizer {
     
     for touch in touches {
       let location = touch.preciseLocation(in: view)
+      //viewRef?.addPoint(x: location.x, y: location.y)
       
-      let x = (location.x / UIScreen.main.bounds.width)*2 - 1
-      let y = (location.y / UIScreen.main.bounds.height)*2 - 1
-      
-//      dump(x)
-//      dump(y)
-      viewRef?.constants.x = Float(x)
-      viewRef?.constants.y = Float(-y)
+      if let coalesced = event.coalescedTouches(for: touch) {
+        for touch in coalesced {
+          let location = touch.preciseLocation(in: view)
+          viewRef?.addPoint(x: location.x, y: location.y)
+        }
+      }
+
+      if let predicted = event.predictedTouches(for: touch) {
+        for touch in predicted {
+          let location = touch.preciseLocation(in: view)
+          viewRef?.setPotentialFuturePoint(x: location.x, y: location.y)
+        }
+      }
     }
-    
-    //viewRef?.metalView.draw()
-    //multipleTouchesToJSON(type: "moved", touches: touches, event: event)
   }
 
   public override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent) {
@@ -122,6 +130,9 @@ class MultiGestureRecognizer: UIGestureRecognizer {
   }
 
   public override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent) {
-    //multipleTouchesToJSON(type: "ended", touches: touches, event: event)
+    for touch in touches {
+      let location = touch.preciseLocation(in: view)
+      viewRef?.addPoint(x: location.x, y: location.y)
+    }
   }
 }

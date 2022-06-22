@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1FA2CB4F2862091900D06E38 /* CGVectorExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA2CB4E2862091800D06E38 /* CGVectorExtensions.swift */; };
 		1FE37ABE2860ACA900DBE6F4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE37ABD2860ACA900DBE6F4 /* AppDelegate.swift */; };
 		1FE37AC02860ACA900DBE6F4 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE37ABF2860ACA900DBE6F4 /* SceneDelegate.swift */; };
 		1FE37AC22860ACA900DBE6F4 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE37AC12860ACA900DBE6F4 /* ViewController.swift */; };
@@ -19,6 +20,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		1FA2CB4E2862091800D06E38 /* CGVectorExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CGVectorExtensions.swift; sourceTree = "<group>"; };
 		1FE37ABA2860ACA900DBE6F4 /* MetalTest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MetalTest.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1FE37ABD2860ACA900DBE6F4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		1FE37ABF2860ACA900DBE6F4 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -62,6 +64,7 @@
 		1FE37ABC2860ACA900DBE6F4 /* MetalTest */ = {
 			isa = PBXGroup;
 			children = (
+				1FA2CB4E2862091800D06E38 /* CGVectorExtensions.swift */,
 				1FE37ABD2860ACA900DBE6F4 /* AppDelegate.swift */,
 				1FE37ABF2860ACA900DBE6F4 /* SceneDelegate.swift */,
 				1FE37AC12860ACA900DBE6F4 /* ViewController.swift */,
@@ -147,6 +150,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1FA2CB4F2862091900D06E38 /* CGVectorExtensions.swift in Sources */,
 				1FE37AD22860B3E900DBE6F4 /* Renderer.swift in Sources */,
 				1FE37AC22860ACA900DBE6F4 /* ViewController.swift in Sources */,
 				1FE37ABE2860ACA900DBE6F4 /* AppDelegate.swift in Sources */,
