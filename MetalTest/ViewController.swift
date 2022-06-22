@@ -46,6 +46,10 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
   var vertexBuffer: MTLBuffer?
   var indexBuffer: MTLBuffer?
   
+  var bufferIndex: Int = 0
+  var vertexBuffers: [MTLBuffer] = []
+  var indexBuffers: [MTLBuffer] = []
+  
   // Constants
   struct Constants {
     var screen_width: Float = Float(UIScreen.main.bounds.width)
@@ -53,7 +57,12 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
   }
   var constants = Constants()
   
-  var time: Float = 0
+  //var time: Float = 0
+  var previousFrameAtTime: Date = Date()
+
+  
+  
+  let inFlightSemaphore = DispatchSemaphore.init(value: 3)
   
   func newLine(x: CGFloat, y: CGFloat){
     print("new line")
@@ -72,9 +81,9 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
     lastPoint = newPoint
   }
   
-  func addPoint(x: CGFloat, y: CGFloat){
+  func addPoint(x: CGFloat, y: CGFloat, width: CGFloat){
     let newPoint = CGVector(dx: x, dy: y)
-    let diff = (newPoint - lastPoint).normalized()*1 // line thickness
+    let diff = (newPoint - lastPoint).normalized() * width // line thickness
     let left_offset = newPoint + diff.rotated90clockwise()
     let right_offset = newPoint + diff.rotated90counterclockwise()
     
@@ -137,8 +146,13 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
   
   private func buildModel(){
     // TODO: size the buffer in some sane way
-    vertexBuffer = device.makeBuffer(bytes: verts, length: 4096*100, options: [])
-    indexBuffer = device.makeBuffer(bytes: indices, length: 4096*100, options: [])
+//    vertexBuffer = device.makeBuffer(bytes: verts, length: 4096*100, options: [])
+//    indexBuffer = device.makeBuffer(bytes: indices, length: 4096*100, options: [])
+    
+    for _ in 0...3 {
+      vertexBuffers.append(device.makeBuffer(bytes: verts, length: 4096*100, options: [])!)
+      indexBuffers.append(device.makeBuffer(bytes: indices, length: 4096*100, options: [])!)
+    }
   }
   
   private func buildPipelineState(){
@@ -150,6 +164,10 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
     pipelineDescriptor.vertexFunction = vertexFunction
     pipelineDescriptor.fragmentFunction = fragmentFunction
     pipelineDescriptor.colorAttachments[0].pixelFormat = .bgra8Unorm
+      
+    for i in 0...6 {
+      pipelineDescriptor.vertexBuffers[i].mutability = MTLMutability.immutable;
+    }
     
     do {
       pipelineState = try device.makeRenderPipelineState(descriptor: pipelineDescriptor)
@@ -164,10 +182,18 @@ extension ViewController: MTKViewDelegate {
   func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {}
   
   func draw(in view: MTKView) {
+    // Semaphore for tripple buffering
+    inFlightSemaphore.wait()
+    
+    
+    let fps = 1000 / (Date().timeIntervalSince(previousFrameAtTime) * 1000)
+    previousFrameAtTime = Date()
+    
+    //print("frame ",fps, bufferIndex)
     guard let drawable = view.currentDrawable,
           let pipelineState = pipelineState,
-          let indexBuffer = indexBuffer,
-          let vertexBuffer = vertexBuffer,
+//          let indexBuffer = indexBuffer,
+//          let vertexBuffer = vertexBuffer,
           let descriptor = view.currentRenderPassDescriptor else {
             return
           }
@@ -184,8 +210,16 @@ extension ViewController: MTKViewDelegate {
     
     // Actual draw calls
     // Update buffers
+    let indexBuffer = indexBuffers[bufferIndex]
+    let vertexBuffer = vertexBuffers[bufferIndex]
     vertexBuffer.contents().copyMemory(from: verts, byteCount: verts.count * MemoryLayout<Float>.stride)
     indexBuffer.contents().copyMemory(from: indices, byteCount: indices.count * MemoryLayout<UInt16>.stride)
+    bufferIndex += 1
+    if bufferIndex == 3 {
+      bufferIndex = 0
+    }
+    
+    //print(bufferIndex)
     
     commandEncoder.setVertexBytes(&constants, length: MemoryLayout<Constants>.stride, index: 1)
     
@@ -197,5 +231,7 @@ extension ViewController: MTKViewDelegate {
     commandBuffer.present(drawable)
     commandBuffer.commit()
     
+    // Release semaphore
+    inFlightSemaphore.signal()
   }
 }
