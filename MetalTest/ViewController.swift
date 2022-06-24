@@ -47,6 +47,7 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
   
   let stroke_color: [Float] = [0,0,0,1]
   
+  var stroke_width: Float = 1.0
   
   func setup(){
     for i in 0...10 {
@@ -97,6 +98,8 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
   func onTouchPredicted(pos: CGPoint){
     if selected_ball > -1 {
       balls[selected_ball].position = pos
+    } else {
+      stroke_width = (Float(pos.y) / Float(UIScreen.main.bounds.width)) * 5.0
     }
   }
   
@@ -106,26 +109,24 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
   
   // Draw Loop
   func draw(){
+    // Reset the render buffer
     renderer.clearBuffer()
-    
-    
     
     // Render a bunch of circles
     for ball in balls {
       renderer.addGeometry(geometry: circleGeometry(pos: ball.position, radius: 40, color: ball.color))
     }
   
+    // Render strokes
     for stroke in strokes {
-      renderer.addGeometry(geometry: strokeGeometry(points: stroke, weight: 1, color: stroke_color))
+      renderer.addGeometry(geometry: strokeGeometry(points: stroke, weight: stroke_width, color: stroke_color))
     }
     
     // Render predicted points
     if predicted_points.count > 1 {
-      renderer.addGeometry(geometry: strokeGeometry(points: predicted_points, weight: 1, color: stroke_color))
+      renderer.addGeometry(geometry: strokeGeometry(points: predicted_points, weight: stroke_width, color: stroke_color))
       predicted_points = [strokes.last!.last!]
     }
-    
-    // Render my strokes
     
   }
 }
