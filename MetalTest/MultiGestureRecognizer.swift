@@ -25,6 +25,8 @@ class MultiGestureRecognizer: UIGestureRecognizer {
       let location = touch.preciseLocation(in: view)
       if touch.type == .pencil {
         viewRef.onPencilDown(pos: location)
+      } else {
+        viewRef.onTouchDown(pos: location)
       }
     }
   }
@@ -38,6 +40,8 @@ class MultiGestureRecognizer: UIGestureRecognizer {
           let location = touch.preciseLocation(in: view)
           if touch.type == .pencil {
             viewRef.onPencilMove(pos: location)
+          } else {
+            viewRef.onTouchMove(pos: location)
           }
         }
       }
@@ -47,6 +51,8 @@ class MultiGestureRecognizer: UIGestureRecognizer {
           let location = touch.preciseLocation(in: view)
           if touch.type == .pencil {
             viewRef.onPencilPredicted(pos: location)
+          } else {
+            viewRef.onTouchPredicted(pos: location)
           }
         }
       }
@@ -63,6 +69,8 @@ class MultiGestureRecognizer: UIGestureRecognizer {
       let location = touch.preciseLocation(in: view)
       if touch.type == .pencil {
         viewRef.onPencilUp(pos: location)
+      } else {
+        viewRef.onTouchUp(pos: location)
       }
     }
   }

@@ -29,12 +29,11 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
     renderer.viewRef = self
     
     // Application logic
+    precomputeCircle()
     setup()
   }
   
   // THIS IS WHERE THE MAGIC HAPPEN 👇
-  
-  
   var selected_ball = -1
   
   struct Ball {
@@ -42,6 +41,12 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
     var color: [Float]
   }
   var balls: [Ball] = []
+  
+  var strokes: [[CGPoint]] = []
+  var predicted_points: [CGPoint] = [CGPoint(x:0,y:0)]
+  
+  let stroke_color: [Float] = [0,0,0,1]
+  
   
   func setup(){
     for i in 0...10 {
@@ -54,7 +59,24 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
   
   // Pencil event handlers
   func onPencilDown(pos: CGPoint){
-    //print("Pencil Down", pos);
+    strokes.append([pos])
+    predicted_points = []
+  }
+  
+  func onPencilMove(pos: CGPoint){
+    strokes[strokes.count-1].append(pos)
+  }
+  
+  func onPencilPredicted(pos: CGPoint){
+    predicted_points.append(pos)
+  }
+  
+  func onPencilUp(pos: CGPoint){
+    //print("Pencil Up", pos);
+  }
+  
+  // Touch event handlers
+  func onTouchDown(pos: CGPoint){
     let pos_vec = CGVector(point: pos)
     selected_ball = -1
     for (index, ball) in balls.enumerated() {
@@ -66,36 +88,16 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
     }
   }
   
-  func onPencilMove(pos: CGPoint){
-    //print("Pencil Move", pos);
-    if selected_ball > -1 {
-      balls[selected_ball].position = pos
-    }
-  }
-  
-  func onPencilPredicted(pos: CGPoint){
-    //print("Pencil Predicted", pos);
-    //quadpos = pos
-    if selected_ball > -1 {
-      balls[selected_ball].position = pos
-    }
-  }
-  
-  func onPencilUp(pos: CGPoint){
-    //print("Pencil Up", pos);
-  }
-  
-  // Touch event handlers
-  func onTouchDown(pos: CGPoint){
-    //print("Pencil Down", pos);
-  }
-  
   func onTouchMove(pos: CGPoint){
-    //print("Pencil Move", pos);
+    if selected_ball > -1 {
+      balls[selected_ball].position = pos
+    }
   }
   
   func onTouchPredicted(pos: CGPoint){
-    //print("Pencil Predicted", pos);
+    if selected_ball > -1 {
+      balls[selected_ball].position = pos
+    }
   }
   
   func onTouchUp(pos: CGPoint){
@@ -108,64 +110,22 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
     
     
     
-    // Render a circle
-
-    var i_offset = 0
+    // Render a bunch of circles
     for ball in balls {
-      var verts: [Vertex] = []
-      var indices: [UInt16] = []
-      
-      let x = Float(ball.position.x)
-      let y = Float(ball.position.y)
-      
-      // Draw anti_alisassed circle
-      let base_color = SIMD4<Float>(ball.color[0], ball.color[1], ball.color[2], 1)
-      let transparent_color = SIMD4<Float>(ball.color[0], ball.color[1], ball.color[2], 0)
-      //let transparent_color = SIMD4<Float>(ball.color.red, ball.color.green, ball.color.blue, 0)
-      
-      verts.append(Vertex(position: SIMD3<Float>(x, y, 0), color: base_color))
-      
-      let factor = (Float.pi*2)/32
-      for i in 0...31 {
-        verts.append(Vertex(position: SIMD3<Float>(x + cos(Float(i)*factor)*40 , y + sin(Float(i)*factor)*40, 0), color: base_color))
-      }
-      
-      for i in 0...31 {
-        verts.append(Vertex(position: SIMD3<Float>(x + cos(Float(i)*factor)*40.5 , y + sin(Float(i)*factor)*40.5, 0), color: transparent_color))
-      }
-      
-      for i in 0...31 {
-        indices.append(UInt16(i_offset))
-        indices.append(UInt16((i%32)+1+i_offset))
-        indices.append(UInt16((i+1)%32+1+i_offset))
-      }
-      
-      for i in 0...31 {
-          indices.append(UInt16((i%32)   + 1+i_offset))
-          indices.append(UInt16((i+1)%32 + 1+i_offset))
-          indices.append(UInt16((i%32)   + 33+i_offset))
-        
-          indices.append(UInt16((i%32)   + 33+i_offset))
-          indices.append(UInt16((i+1)%32 + 33+i_offset))
-          indices.append(UInt16((i+1)%32 + 1+i_offset))
-      }
-      
-      i_offset += 65
-      
-      renderer.addElements(v: verts, i: indices)
+      renderer.addGeometry(geometry: circleGeometry(pos: ball.position, radius: 40, color: ball.color))
     }
   
+    for stroke in strokes {
+      renderer.addGeometry(geometry: strokeGeometry(points: stroke, weight: 1, color: stroke_color))
+    }
     
-//    renderer.addElements(
-//      v: [
-//        Vertex(position: SIMD3<Float>(x - 50 , y + 50, 0), color: SIMD4<Float>(1, 0, 0, 1)),
-//        Vertex(position: SIMD3<Float>(x - 50 , y - 50, 0), color: SIMD4<Float>(0, 1, 0, 1)),
-//        Vertex(position: SIMD3<Float>(x + 50 , y - 50, 0), color: SIMD4<Float>(0, 0, 1, 0)),
-//        Vertex(position: SIMD3<Float>(x + 50 , y + 50, 0), color: SIMD4<Float>(1, 0, 1, 0)),
-//      ],
-//      i: [
-//        0, 1, 2,
-//        2, 3, 0
-//      ])
+    // Render predicted points
+    if predicted_points.count > 1 {
+      renderer.addGeometry(geometry: strokeGeometry(points: predicted_points, weight: 1, color: stroke_color))
+      predicted_points = [strokes.last!.last!]
+    }
+    
+    // Render my strokes
+    
   }
 }

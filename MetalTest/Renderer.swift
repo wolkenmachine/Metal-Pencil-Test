@@ -12,6 +12,11 @@ struct Vertex {
   var color: SIMD4<Float>
 }
 
+struct Geometry {
+  var verts: [Vertex]
+  var indices: [UInt16]
+}
+
 let NUMBER_OF_VERTS = 10000;
 
 class Renderer: NSObject {
@@ -26,19 +31,9 @@ class Renderer: NSObject {
   var vertexBuffer: MTLBuffer!
   var indexBuffer: MTLBuffer!
   
-  // Data to render
-  //var verts = [Vertex](repeating: Vertex(position: SIMD3<Float>(0 , 0, 0), color: SIMD4<Float>(0, 0, 0, 0)), count: NUMBER_OF_VERTS)
-  var verts: [Vertex] = [
-    Vertex(position: SIMD3<Float>(50 , 200, 0), color: SIMD4<Float>(1, 0, 0, 1)),
-    Vertex(position: SIMD3<Float>(50 , 50 , 0), color: SIMD4<Float>(0, 1, 0, 1)),
-    Vertex(position: SIMD3<Float>(200, 50 , 0), color: SIMD4<Float>(0, 0, 1, 0)),
-    Vertex(position: SIMD3<Float>(200, 200, 0), color: SIMD4<Float>(1, 0, 1, 0)),
-  ]
-
-  var indices: [UInt16] = [
-    0, 1, 2,
-    2, 3, 0
-  ]
+  // Buffer sizes for rendering
+  var vertexBufferSize = 0;
+  var indexBufferSize = 0;
   
   // Screen size
   struct Constants {
@@ -65,14 +60,11 @@ class Renderer: NSObject {
     
   }
   
-  // Load
   private func createBuffers(){
-    // TODO: size the buffer in some sane, non random way
-    //MemoryLayout<Vertex>.stride * verts.count
-    vertexBuffer = device.makeBuffer(bytes: verts, length: 4096*1000, options: [])
-    
-    //MemoryLayout<UInt16>.size
-    indexBuffer = device.makeBuffer(bytes: indices, length: 4096*1000, options: [])
+    // Buffer for 10000 verts, and 10000 indexes
+    let count = 100000
+    vertexBuffer = device.makeBuffer(length: count * MemoryLayout<Vertex>.stride, options: [])
+    indexBuffer = device.makeBuffer(length: count*MemoryLayout<UInt16>.size, options: [])
   }
 
   private func createPipelineState(){
@@ -119,14 +111,33 @@ class Renderer: NSObject {
   
   
   // API
+  // Reset the buffer
   public func clearBuffer(){
-    verts = []
-    indices = []
+    vertexBufferSize = 0;
+    indexBufferSize = 0;
   }
 
-  public func addElements(v: [Vertex], i: [UInt16]) {
-    verts += v
-    indices += i
+  // Copy new elements into buffer
+  // TODO auto grow buffer size if we overflow
+  public func addGeometry(geometry: Geometry) {
+    
+    // Copy verts
+    let vertexByteOffset = MemoryLayout<Vertex>.stride * vertexBufferSize
+    (vertexBuffer.contents() + vertexByteOffset).copyMemory(from: geometry.verts, byteCount: geometry.verts.count * MemoryLayout<Vertex>.stride)
+    
+    
+    
+    // Offset indicies by bufferSize
+    let indices = geometry.indices.map { $0 + UInt16(vertexBufferSize) }
+    
+    // Copy indicies
+    let indexByteOffset = MemoryLayout<UInt16>.stride * indexBufferSize
+    (indexBuffer.contents() + indexByteOffset).copyMemory(from: indices, byteCount: indices.count * MemoryLayout<UInt16>.stride)
+    
+    
+    // Increase buffer sizes
+    vertexBufferSize += geometry.verts.count
+    indexBufferSize += geometry.indices.count
   }
 }
 
@@ -142,26 +153,16 @@ extension Renderer: MTKViewDelegate {
     
     viewRef.draw()
     
-    // Copy updates into buffer
-//    let vertexPoints = vertexBuffer.contents().bindMemory(to: Vertex.self, capacity: verts.count)
-//    vertexPoints.assign(from: &verts, count: verts.count)
-//
-//    let indexPoints = indexBuffer.contents().bindMemory(to: UInt16.self, capacity: indices.count)
-//    indexPoints.assign(from: &indices, count: indices.count)
-    
-    vertexBuffer.contents().copyMemory(from: verts, byteCount: verts.count * MemoryLayout<Vertex>.stride)
-    indexBuffer.contents().copyMemory(from: indices, byteCount: indices.count * MemoryLayout<UInt16>.stride)
-    
     // Prepare commandBuffer
     let commandBuffer = commandQueue.makeCommandBuffer()!
     let commandEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: descriptor)!
     commandEncoder.setRenderPipelineState(pipelineState)
 
     // Draw calls
-    if indices.count>0 {
+    if indexBufferSize>0 {
       commandEncoder.setVertexBytes(&constants, length: MemoryLayout<Constants>.stride, index: 1)
       commandEncoder.setVertexBuffer(vertexBuffer, offset: 0, index: 0)
-      commandEncoder.drawIndexedPrimitives(type: .triangle, indexCount: indices.count, indexType: .uint16, indexBuffer: indexBuffer, indexBufferOffset: 0)
+      commandEncoder.drawIndexedPrimitives(type: .triangle, indexCount: indexBufferSize, indexType: .uint16, indexBuffer: indexBuffer, indexBufferOffset: 0)
     }
     
     // Wrap up and commit commandBuffer
