@@ -62,7 +62,7 @@ class Renderer: NSObject {
   
   private func createBuffers(){
     // Buffer for 10000 verts, and 10000 indexes
-    let count = 100000
+    let count = 200000
     vertexBuffer = device.makeBuffer(length: count * MemoryLayout<Vertex>.stride, options: [])
     indexBuffer = device.makeBuffer(length: count*MemoryLayout<UInt16>.size, options: [])
   }

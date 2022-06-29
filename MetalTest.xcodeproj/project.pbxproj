@@ -10,7 +10,6 @@
 		1F45A6672865ECBA00C649D7 /* Geometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F45A6662865ECBA00C649D7 /* Geometry.swift */; };
 		1F45A6692865F39400C649D7 /* Drawing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F45A6682865F39400C649D7 /* Drawing.swift */; };
 		1FA2CB4F2862091900D06E38 /* CGVectorExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA2CB4E2862091800D06E38 /* CGVectorExtensions.swift */; };
-		1FA2CB512864845300D06E38 /* ViewController_Old.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA2CB502864845300D06E38 /* ViewController_Old.swift */; };
 		1FE37ABE2860ACA900DBE6F4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE37ABD2860ACA900DBE6F4 /* AppDelegate.swift */; };
 		1FE37AC02860ACA900DBE6F4 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE37ABF2860ACA900DBE6F4 /* SceneDelegate.swift */; };
 		1FE37AC22860ACA900DBE6F4 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE37AC12860ACA900DBE6F4 /* ViewController.swift */; };
@@ -26,7 +25,6 @@
 		1F45A6662865ECBA00C649D7 /* Geometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Geometry.swift; sourceTree = "<group>"; };
 		1F45A6682865F39400C649D7 /* Drawing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Drawing.swift; sourceTree = "<group>"; };
 		1FA2CB4E2862091800D06E38 /* CGVectorExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CGVectorExtensions.swift; sourceTree = "<group>"; };
-		1FA2CB502864845300D06E38 /* ViewController_Old.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController_Old.swift; sourceTree = "<group>"; };
 		1FA2CB5228648F6E00D06E38 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		1FE37ABA2860ACA900DBE6F4 /* MetalTest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MetalTest.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1FE37ABD2860ACA900DBE6F4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -78,14 +76,13 @@
 				1FE37AC12860ACA900DBE6F4 /* ViewController.swift */,
 				1FE37AD12860B3E900DBE6F4 /* Renderer.swift */,
 				1FE37AD52860C7AB00DBE6F4 /* MultiGestureRecognizer.swift */,
-				1FA2CB502864845300D06E38 /* ViewController_Old.swift */,
+				1F45A6662865ECBA00C649D7 /* Geometry.swift */,
+				1F45A6682865F39400C649D7 /* Drawing.swift */,
 				1FE37AD32860B61000DBE6F4 /* Shader.metal */,
 				1FE37AC32860ACA900DBE6F4 /* Main.storyboard */,
 				1FE37AC62860ACAB00DBE6F4 /* Assets.xcassets */,
 				1FE37AC82860ACAB00DBE6F4 /* LaunchScreen.storyboard */,
 				1FE37ACB2860ACAB00DBE6F4 /* Info.plist */,
-				1F45A6662865ECBA00C649D7 /* Geometry.swift */,
-				1F45A6682865F39400C649D7 /* Drawing.swift */,
 			);
 			path = MetalTest;
 			sourceTree = "<group>";
@@ -161,7 +158,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1FA2CB512864845300D06E38 /* ViewController_Old.swift in Sources */,
 				1FA2CB4F2862091900D06E38 /* CGVectorExtensions.swift in Sources */,
 				1FE37AD22860B3E900DBE6F4 /* Renderer.swift in Sources */,
 				1FE37AC22860ACA900DBE6F4 /* ViewController.swift in Sources */,

@@ -75,7 +75,7 @@ public extension CGVector {
    * Returns the angle in radians of the vector described by the CGVector.
    * The range of the angle is -π to π; an angle of 0 points to the right.
    */
-  var angle: CGFloat {
+  func angle() -> CGFloat {
     return atan2(dy, dx)
   }
   
@@ -91,6 +91,12 @@ public extension CGVector {
    */
   func rotated90counterclockwise() -> CGVector {
     return CGVector(dx: -self.dy, dy: self.dx)
+  }
+  
+  func rotated(angle: CGFloat) -> CGVector {
+    let c = cos(angle)
+    let s = sin(angle)
+    return CGVector(dx: self.dx*c - self.dy*s, dy: self.dx*s + self.dy*c)
   }
 
 }
@@ -186,4 +192,8 @@ public func /= (vector: inout CGVector, scalar: CGFloat) {
  */
 public func lerp(start: CGVector, end: CGVector, t: CGFloat) -> CGVector {
   return start + (end - start) * t
+}
+
+public func dot(a: CGVector, b: CGVector) -> CGFloat {
+  return a.dx * b.dx + a.dy * b.dy
 }
