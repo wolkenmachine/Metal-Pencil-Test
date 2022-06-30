@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1F13FD14286C578500B3699C /* Compute.metal in Sources */ = {isa = PBXBuildFile; fileRef = 1F13FD13286C578500B3699C /* Compute.metal */; };
 		1F45A6672865ECBA00C649D7 /* Geometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F45A6662865ECBA00C649D7 /* Geometry.swift */; };
 		1F45A6692865F39400C649D7 /* Drawing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F45A6682865F39400C649D7 /* Drawing.swift */; };
 		1FA2CB4F2862091900D06E38 /* CGVectorExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA2CB4E2862091800D06E38 /* CGVectorExtensions.swift */; };
@@ -22,6 +23,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		1F13FD13286C578500B3699C /* Compute.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Compute.metal; sourceTree = "<group>"; };
 		1F45A6662865ECBA00C649D7 /* Geometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Geometry.swift; sourceTree = "<group>"; };
 		1F45A6682865F39400C649D7 /* Drawing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Drawing.swift; sourceTree = "<group>"; };
 		1FA2CB4E2862091800D06E38 /* CGVectorExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CGVectorExtensions.swift; sourceTree = "<group>"; };
@@ -79,6 +81,7 @@
 				1F45A6662865ECBA00C649D7 /* Geometry.swift */,
 				1F45A6682865F39400C649D7 /* Drawing.swift */,
 				1FE37AD32860B61000DBE6F4 /* Shader.metal */,
+				1F13FD13286C578500B3699C /* Compute.metal */,
 				1FE37AC32860ACA900DBE6F4 /* Main.storyboard */,
 				1FE37AC62860ACAB00DBE6F4 /* Assets.xcassets */,
 				1FE37AC82860ACAB00DBE6F4 /* LaunchScreen.storyboard */,
@@ -165,6 +168,7 @@
 				1FE37ABE2860ACA900DBE6F4 /* AppDelegate.swift in Sources */,
 				1FE37AD62860C7AB00DBE6F4 /* MultiGestureRecognizer.swift in Sources */,
 				1FE37AD42860B61000DBE6F4 /* Shader.metal in Sources */,
+				1F13FD14286C578500B3699C /* Compute.metal in Sources */,
 				1F45A6672865ECBA00C649D7 /* Geometry.swift in Sources */,
 				1FE37AC02860ACA900DBE6F4 /* SceneDelegate.swift in Sources */,
 			);

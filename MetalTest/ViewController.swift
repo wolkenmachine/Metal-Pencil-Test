@@ -44,6 +44,11 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
   
   // THIS IS WHERE THE MAGIC HAPPEN 👇
   
+  // Compute stroke
+  var compute_stroke: [Vertex] = []
+  var predicted_stroke: [Vertex] = []
+  
+  
   // Stroke stuff
   var active_stroke: Stroke? = nil
   var line_strokes: [LineStroke] = []
@@ -67,62 +72,62 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
   }
   
   // Pencil event handlers
-  func onPencilDown(pos: CGPoint){
-    active_stroke = Stroke()
-    active_stroke!.add_point(point: pos)
-    predicted_points = []
+  func onPencilDown(pos: CGPoint, force: CGFloat){
+    compute_stroke.append(Vertex(
+      position: SIMD3<Float>(Float(pos.x), Float(pos.y), Float(force)),
+      color: SIMD4<Float>(0,0,0,0)
+    ))
+    compute_stroke.append(Vertex(
+      position: SIMD3<Float>(Float(pos.x), Float(pos.y), Float(force)),
+      color: SIMD4<Float>(0,0,0,1)
+    ))
+    
+//    active_stroke = Stroke()
+//    active_stroke!.add_point(point: pos)
+//    predicted_points = []
   }
   
-  func onPencilMove(pos: CGPoint){
-    active_stroke!.add_point(point: pos)
+  func onPencilMove(pos: CGPoint, force: CGFloat){
+    compute_stroke.append(Vertex(
+      position: SIMD3<Float>(Float(pos.x), Float(pos.y), Float(force)),
+      color: SIMD4<Float>(0,0,0,1)
+    ))
   }
   
-  func onPencilPredicted(pos: CGPoint){
-    predicted_points.append(pos)
+  func onPencilPredicted(pos: CGPoint, force: CGFloat){
+    predicted_stroke.append(Vertex(
+      position: SIMD3<Float>(Float(pos.x), Float(pos.y), Float(force)),
+      color: SIMD4<Float>(0,0,0,1)
+    ))
   }
   
-  func onPencilUp(pos: CGPoint){
-    active_stroke!.resample_stroke()
-    let new_line_strokes = active_stroke!.split_by_corners()
-    line_strokes += new_line_strokes
-    active_stroke = nil
+  func onPencilUp(pos: CGPoint, force: CGFloat){
+    compute_stroke.append(Vertex(
+      position: SIMD3<Float>(Float(pos.x), Float(pos.y), Float(force)),
+      color: SIMD4<Float>(0,0,0,1)
+    ))
+    compute_stroke.append(Vertex(
+      position: SIMD3<Float>(Float(pos.x), Float(pos.y), Float(force)),
+      color: SIMD4<Float>(0,0,0,0)
+    ))
+//    active_stroke!.resample_stroke()
+//    let new_line_strokes = active_stroke!.split_by_corners()
+//    line_strokes += new_line_strokes
+//    active_stroke = nil
   }
-  
-  
-  
   
   var selected_points: [(Int, Int)] = []
   
   func onTouchDown(pos: CGPoint){
-    active_stroke = Stroke()
-    active_stroke!.add_point(point: pos)
-    predicted_points = []
-    
-    
-//    selected_points = []
-//
-//    let posv = CGVector(point: pos)
-//    for (i, stroke) in line_strokes.enumerated() {
-//
-//      let start = CGVector(point: stroke.points.first!)
-//      if (posv - start).length() < 30 {
-//        selected_points.append((i, 1))
-//        stroke.grab_point()
-//      }
-//
-//      let end = CGVector(point: stroke.points.last!)
-//      if (posv - end).length() < 30 {
-//        selected_points.append((i, 0))
-//        stroke.grab_point()
-//      }
-//    }
     
   }
   
   func onTouchMove(pos: CGPoint){
-    active_stroke!.add_point(point: pos)
-//    for sp in selected_points {
-//      line_strokes[sp.0].move_corner_to(pos: CGVector(point: pos), handle: sp.1)
+//    for i in 0..<compute_stroke.count {
+//      let point = compute_stroke[i].position
+//      let diff = (CGVector(dx: CGFloat(point[0]), dy: CGFloat(point[1])) - CGVector(point: pos)).normalized()
+//      compute_stroke[i].position[0] -= Float(diff.dx)
+//      compute_stroke[i].position[1] -= Float(diff.dy)
 //    }
   }
   
@@ -130,36 +135,33 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
   }
   
   func onTouchUp(pos: CGPoint){
-    active_stroke!.resample_stroke()
-    let new_line_strokes = active_stroke!.split_by_corners()
-    line_strokes += new_line_strokes
-    active_stroke = nil
-    //print("Pencil Up", pos);
-    //active_stroke = nil
+
   }
   
   // Draw Loop
   func draw(){
     let fps = (1000 / (Date().timeIntervalSince(previousFrameTime) * 1000)).rounded()
     previousFrameTime = Date()
-    let triangles = renderer.indexBufferSize / 3
-    debugInfo.text = "FPS: \(fps) \n TRIANGLES: \(triangles)"
+    let triangles = (compute_stroke.count-1)*2
+    debugInfo.text = "FPS: \(fps)\nTRIANGLES: \(triangles)"
     
     
     // Reset the render buffer
-    renderer.clearBuffer()
-
-    // Render strokes
+    //renderer.clearBuffer()
     
-    for stroke in line_strokes {
-      renderer.addGeometry(geometry: stroke.geometry)
-      //renderer.addGeometry(geometry: circleGeometry(pos: stroke.points.first!, radius: 4, color: [1, 0, 0, 1]))
-      //renderer.addGeometry(geometry: circleGeometry(pos: stroke.points.last!, radius: 4, color: [1, 0, 0, 1]))
-    }
-    
-    if(active_stroke != nil) {
-      renderer.addGeometry(geometry: active_stroke!.geometry)
-    }
+    renderer.loadStrokes(data: compute_stroke + predicted_stroke)
+    predicted_stroke = []
+//    // Render strokes
+//
+//    for stroke in line_strokes {
+//      renderer.addGeometry(geometry: stroke.geometry)
+//      //renderer.addGeometry(geometry: circleGeometry(pos: stroke.points.first!, radius: 4, color: [1, 0, 0, 1]))
+//      //renderer.addGeometry(geometry: circleGeometry(pos: stroke.points.last!, radius: 4, color: [1, 0, 0, 1]))
+//    }
+//
+//    if(active_stroke != nil) {
+//      renderer.addGeometry(geometry: active_stroke!.geometry)
+//    }
       
       
 //      for point in stroke.corners {

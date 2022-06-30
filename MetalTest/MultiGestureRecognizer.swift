@@ -18,13 +18,13 @@ class MultiGestureRecognizer: UIGestureRecognizer {
     // allows pen + touch input at the same time
     requiresExclusiveTouchType = false
   }
-
+  
   public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
     //multipleTouchesToJSON(type: "began", touches: touches, event: event)
     for touch in touches {
       let location = touch.preciseLocation(in: view)
       if touch.type == .pencil {
-        viewRef.onPencilDown(pos: location)
+        viewRef.onPencilDown(pos: location, force: touch.force)
       } else {
         viewRef.onTouchDown(pos: location)
       }
@@ -39,7 +39,7 @@ class MultiGestureRecognizer: UIGestureRecognizer {
         for touch in coalesced {
           let location = touch.preciseLocation(in: view)
           if touch.type == .pencil {
-            viewRef.onPencilMove(pos: location)
+            viewRef.onPencilMove(pos: location, force: touch.force)
           } else {
             viewRef.onTouchMove(pos: location)
           }
@@ -50,7 +50,7 @@ class MultiGestureRecognizer: UIGestureRecognizer {
         for touch in predicted {
           let location = touch.preciseLocation(in: view)
           if touch.type == .pencil {
-            viewRef.onPencilPredicted(pos: location)
+            viewRef.onPencilPredicted(pos: location, force: touch.force)
           } else {
             viewRef.onTouchPredicted(pos: location)
           }
@@ -68,7 +68,7 @@ class MultiGestureRecognizer: UIGestureRecognizer {
     for touch in touches {
       let location = touch.preciseLocation(in: view)
       if touch.type == .pencil {
-        viewRef.onPencilUp(pos: location)
+        viewRef.onPencilUp(pos: location, force: touch.force)
       } else {
         viewRef.onTouchUp(pos: location)
       }

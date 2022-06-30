@@ -18,6 +18,7 @@ struct Geometry {
 }
 
 let NUMBER_OF_VERTS = 10000;
+let MSAA = 4;
 
 class Renderer: NSObject {
   var viewRef: ViewController!
@@ -26,14 +27,18 @@ class Renderer: NSObject {
   var device: MTLDevice!
   var commandQueue: MTLCommandQueue!
   var pipelineState: MTLRenderPipelineState!
+  var computePipelineState: MTLComputePipelineState!
   
   // Buffers
   var vertexBuffer: MTLBuffer!
   var indexBuffer: MTLBuffer!
   
+  var pointBuffer: MTLBuffer!
+  
   // Buffer sizes for rendering
   var vertexBufferSize = 0;
   var indexBufferSize = 0;
+  var pointBufferSize = 0;
   
   // Screen size
   struct Constants {
@@ -57,6 +62,7 @@ class Renderer: NSObject {
     // Default settings
     metalView.preferredFramesPerSecond = 120
     metalView.clearColor = MTLClearColor(red: 0.9921568627, green: 0.9882352941, blue: 0.9843137255, alpha: 1.0) // Off white
+    metalView.sampleCount = MSAA
     
   }
   
@@ -65,6 +71,13 @@ class Renderer: NSObject {
     let count = 200000
     vertexBuffer = device.makeBuffer(length: count * MemoryLayout<Vertex>.stride, options: [])
     indexBuffer = device.makeBuffer(length: count*MemoryLayout<UInt16>.size, options: [])
+    
+    // Compute
+    var bytes: [Float] = []
+    for i in 0..<10000 {
+      bytes.append(Float(i))
+    }
+    pointBuffer = device.makeBuffer(length: count * MemoryLayout<Vertex>.stride, options: [])
   }
 
   private func createPipelineState(){
@@ -78,6 +91,7 @@ class Renderer: NSObject {
     pipelineDescriptor.vertexFunction = vertexFunction
     pipelineDescriptor.fragmentFunction = fragmentFunction
     pipelineDescriptor.colorAttachments[0].pixelFormat = .bgra8Unorm // Default pixel format
+    pipelineDescriptor.rasterSampleCount = MSAA
 
     // Create vertex descriptor
     let vertexDescriptor = MTLVertexDescriptor()
@@ -104,6 +118,17 @@ class Renderer: NSObject {
     
     do {
       pipelineState = try device.makeRenderPipelineState(descriptor: pipelineDescriptor)
+    } catch let error as NSError {
+      print("error: \(error.localizedDescription)")
+    }
+    
+    // Compute Pipeline
+    
+    // Get Compute function
+    let geometryGPUFunction = library?.makeFunction(name: "compute_line_geometry")
+    
+    do {
+      computePipelineState = try device.makeComputePipelineState(function: geometryGPUFunction!)
     } catch let error as NSError {
       print("error: \(error.localizedDescription)")
     }
@@ -139,6 +164,11 @@ class Renderer: NSObject {
     vertexBufferSize += geometry.verts.count
     indexBufferSize += geometry.indices.count
   }
+  
+  public func loadStrokes(data: [Vertex]) {
+    pointBuffer.contents().copyMemory(from: data, byteCount: data.count * MemoryLayout<Vertex>.stride)
+    pointBufferSize = data.count
+  }
 }
 
 extension Renderer: MTKViewDelegate {
@@ -155,18 +185,42 @@ extension Renderer: MTKViewDelegate {
     
     // Prepare commandBuffer
     let commandBuffer = commandQueue.makeCommandBuffer()!
+    
+    // Compute Pass
+    if(pointBufferSize > 2) {
+      let computeCommandEncoder = commandBuffer.makeComputeCommandEncoder()!
+      computeCommandEncoder.setComputePipelineState(computePipelineState)
+      
+      computeCommandEncoder.setBuffer(pointBuffer, offset: 0, index: 0)
+      computeCommandEncoder.setBuffer(vertexBuffer, offset: 0, index: 1)
+      
+      let threadsPerGrid = MTLSize(width: pointBufferSize-1, height: 1, depth: 1)
+      let maxThreadsPerThreadGroup = computePipelineState.maxTotalThreadsPerThreadgroup
+      let threadsPerThreadGroup = MTLSize(width: maxThreadsPerThreadGroup, height: 1, depth: 1)
+      computeCommandEncoder.dispatchThreads(threadsPerGrid, threadsPerThreadgroup: threadsPerThreadGroup)
+      
+      computeCommandEncoder.endEncoding()
+    }
+    
+    
+    
+    
+    // Render Pass
     let commandEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: descriptor)!
     commandEncoder.setRenderPipelineState(pipelineState)
 
     // Draw calls
-    if indexBufferSize>0 {
+    if pointBufferSize>2 {
       commandEncoder.setVertexBytes(&constants, length: MemoryLayout<Constants>.stride, index: 1)
       commandEncoder.setVertexBuffer(vertexBuffer, offset: 0, index: 0)
-      commandEncoder.drawIndexedPrimitives(type: .triangle, indexCount: indexBufferSize, indexType: .uint16, indexBuffer: indexBuffer, indexBufferOffset: 0)
+      commandEncoder.drawPrimitives(type: MTLPrimitiveType.triangleStrip, vertexStart: 0, vertexCount: pointBufferSize*2-2)
+
+//      commandEncoder.drawIndexedPrimitives(type: .triangle, indexCount: indexBufferSize, indexType: .uint16, indexBuffer: indexBuffer, indexBufferOffset: 0)
     }
     
-    // Wrap up and commit commandBuffer
     commandEncoder.endEncoding()
+    
+    // Wrap up and commit commandBuffer
     commandBuffer.present(drawable)
     commandBuffer.commit()
     
