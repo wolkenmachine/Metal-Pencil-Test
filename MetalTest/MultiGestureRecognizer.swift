@@ -59,10 +59,16 @@ class MultiGestureRecognizer: UIGestureRecognizer {
     }
   }
 
-//  public override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent) {
-//    print("touchesCancelled")
-//    //multipleTouchesToJSON(type: "cancelled", touches: touches, event: event)
-//  }
+  public override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent) {
+    for touch in touches {
+      let location = touch.preciseLocation(in: view)
+      if touch.type == .pencil {
+        viewRef.onPencilUp(pos: location, force: touch.force)
+      } else {
+        viewRef.onTouchUp(pos: location)
+      }
+    }
+  }
 
   public override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent) {
     for touch in touches {

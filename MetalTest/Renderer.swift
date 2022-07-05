@@ -30,10 +30,13 @@ class Renderer: NSObject {
   var computePipelineState: MTLComputePipelineState!
   
   // Buffers
+  var pointBuffer: MTLBuffer!
+  var pointVertexBuffer: MTLBuffer!
+  
   var vertexBuffer: MTLBuffer!
   var indexBuffer: MTLBuffer!
   
-  var pointBuffer: MTLBuffer!
+  
   
   // Buffer sizes for rendering
   var vertexBufferSize = 0;
@@ -78,6 +81,7 @@ class Renderer: NSObject {
       bytes.append(Float(i))
     }
     pointBuffer = device.makeBuffer(length: count * MemoryLayout<Vertex>.stride, options: [])
+    pointVertexBuffer = device.makeBuffer(length: count * MemoryLayout<Vertex>.stride, options: [])
   }
 
   private func createPipelineState(){
@@ -140,6 +144,7 @@ class Renderer: NSObject {
   public func clearBuffer(){
     vertexBufferSize = 0;
     indexBufferSize = 0;
+    pointBufferSize = 0;
   }
 
   // Copy new elements into buffer
@@ -169,6 +174,13 @@ class Renderer: NSObject {
     pointBuffer.contents().copyMemory(from: data, byteCount: data.count * MemoryLayout<Vertex>.stride)
     pointBufferSize = data.count
   }
+  
+  public func addStrokeData(data: [Vertex]) {
+    let byteOffset = MemoryLayout<Vertex>.stride * pointBufferSize
+    (pointBuffer.contents() + byteOffset).copyMemory(from: data, byteCount: data.count * MemoryLayout<Vertex>.stride)
+    pointBufferSize += data.count
+  }
+  
 }
 
 extension Renderer: MTKViewDelegate {
@@ -192,7 +204,7 @@ extension Renderer: MTKViewDelegate {
       computeCommandEncoder.setComputePipelineState(computePipelineState)
       
       computeCommandEncoder.setBuffer(pointBuffer, offset: 0, index: 0)
-      computeCommandEncoder.setBuffer(vertexBuffer, offset: 0, index: 1)
+      computeCommandEncoder.setBuffer(pointVertexBuffer, offset: 0, index: 1)
       
       let threadsPerGrid = MTLSize(width: pointBufferSize-1, height: 1, depth: 1)
       let maxThreadsPerThreadGroup = computePipelineState.maxTotalThreadsPerThreadgroup
@@ -212,11 +224,16 @@ extension Renderer: MTKViewDelegate {
     // Draw calls
     if pointBufferSize>2 {
       commandEncoder.setVertexBytes(&constants, length: MemoryLayout<Constants>.stride, index: 1)
-      commandEncoder.setVertexBuffer(vertexBuffer, offset: 0, index: 0)
+      commandEncoder.setVertexBuffer(pointVertexBuffer, offset: 0, index: 0)
       commandEncoder.drawPrimitives(type: MTLPrimitiveType.triangleStrip, vertexStart: 0, vertexCount: pointBufferSize*2-2)
 
-//      commandEncoder.drawIndexedPrimitives(type: .triangle, indexCount: indexBufferSize, indexType: .uint16, indexBuffer: indexBuffer, indexBufferOffset: 0)
     }
+    
+    if indexBufferSize > 0 {
+      commandEncoder.setVertexBuffer(vertexBuffer, offset: 0, index: 0)
+      commandEncoder.drawIndexedPrimitives(type: .triangle, indexCount: indexBufferSize, indexType: .uint16, indexBuffer: indexBuffer, indexBufferOffset: 0)
+    }
+    
     
     commandEncoder.endEncoding()
     

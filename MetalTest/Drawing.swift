@@ -113,3 +113,124 @@ class LineStroke: NSObject {
     geometry = strokeGeometry(points: points, weight: width, color: color)
   }
 }
+
+class FastStroke: NSObject {
+  var points: [CGVector] = []
+  var geometry: [Vertex] = []
+  var key_points: [CGVector] = []
+  var key_point_index: [Int] = []
+  var key_point_geometry: [Geometry] = []
+  
+  func start_stroke(pos: CGPoint, force: CGFloat){
+    points.append(CGVector(point: pos))
+    geometry.append(Vertex(
+      position: SIMD3<Float>(Float(pos.x), Float(pos.y), Float(force)),
+      color: SIMD4<Float>(0,0,0,0)
+    ))
+    geometry.append(Vertex(
+      position: SIMD3<Float>(Float(pos.x), Float(pos.y), Float(force)),
+      color: SIMD4<Float>(0,0,0,1)
+    ))
+  }
+  
+  func add_stroke_point(pos: CGPoint, force: CGFloat){
+    points.append(CGVector(point: pos))
+    geometry.append(Vertex(
+      position: SIMD3<Float>(Float(pos.x), Float(pos.y), Float(force)),
+      color: SIMD4<Float>(0,0,0,1)
+    ))
+  }
+  
+  func end_stroke(pos: CGPoint, force: CGFloat){
+    points.append(CGVector(point: pos))
+    geometry.append(Vertex(
+      position: SIMD3<Float>(Float(pos.x), Float(pos.y), Float(force)),
+      color: SIMD4<Float>(0,0,0,1)
+    ))
+    geometry.append(Vertex(
+      position: SIMD3<Float>(Float(pos.x), Float(pos.y), Float(force)),
+      color: SIMD4<Float>(0,0,0,0)
+    ))
+  }
+  
+  func compute_lineness(){
+    let l = Lineness(line: points)
+    print(l)
+  }
+  
+  func recompute_geometry(){
+    for i in 0..<points.count {
+      geometry[i+1].position[0] = Float(points[i].dx)
+      geometry[i+1].position[1] = Float(points[i].dy)
+    }
+    
+    geometry[0].position[0] = Float(points.first!.dx)
+    geometry[0].position[1] = Float(points.first!.dy)
+    geometry[geometry.count - 1].position[0] = Float(points.last!.dx)
+    geometry[geometry.count - 1].position[1] = Float(points.last!.dy)
+  }
+  
+  func get_key_point_index(pos: CGVector) -> Int {
+    return points.firstIndex(where: { $0 == pos })!
+  }
+  
+  func drag_key_point(index: Int, new_pos: CGVector) {
+    let point = key_point_index[index]
+    
+    if index > 0 {
+      let prev = key_point_index[index - 1]
+      drag_points_between(a: prev, b: point, new_pos: new_pos, last: index==key_points.count-1)
+    }
+    
+    if index < key_points.count-1 {
+      let next = key_point_index[index + 1]
+      drag_points_between(a: next, b: point, new_pos: new_pos, last: index==key_points.count-1)
+    }
+  }
+  
+  func drag_points_between(a: Int, b: Int, new_pos: CGVector, last: Bool){
+    let start = points[a]
+    let end = points[b]
+    
+    
+    var old_transform = TransformMatrix()
+    old_transform.from_line(start, end)
+    old_transform = old_transform.get_inverse()
+    let new_transform = TransformMatrix()
+    new_transform.from_line(start, new_pos)
+    
+    let old_vec_length = (start - end).length()
+    let new_vec_length = (new_pos - start).length()
+    let scale = new_vec_length / old_vec_length
+    
+    var low = a
+    var hi = b
+    if a > b {
+      low = b
+      hi = a
+    }
+    
+    if last {
+      hi+=1
+    }
+    
+    for i in low..<hi {
+      let point = points[i]
+      var projected = old_transform.transform_vector(point)
+      projected.dx = projected.dx * scale
+        
+      let new_point = new_transform.transform_vector(projected)
+      points[i] = new_point
+    }
+  }
+  
+  func compute_key_points(){
+    key_points = RDP_Simplify(line: points)
+    key_point_geometry = []
+    key_point_index = []
+    for p in key_points {
+      key_point_geometry.append(circleGeometry(pos: p, radius:2, color: [1,0,0,1]))
+      key_point_index.append(get_key_point_index(pos: p))
+    }
+  }
+}

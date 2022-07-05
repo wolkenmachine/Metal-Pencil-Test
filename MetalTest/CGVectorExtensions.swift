@@ -194,6 +194,10 @@ public func lerp(start: CGVector, end: CGVector, t: CGFloat) -> CGVector {
   return start + (end - start) * t
 }
 
-public func dot(a: CGVector, b: CGVector) -> CGFloat {
+public func dot(_ a: CGVector, _ b: CGVector) -> CGFloat {
   return a.dx * b.dx + a.dy * b.dy
 }
+
+//public func cross(_ a: CGVector, _ b: CGVector) -> CGFloat {
+//  
+//}
