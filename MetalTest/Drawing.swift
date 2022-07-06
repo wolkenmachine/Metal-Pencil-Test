@@ -120,6 +120,7 @@ class FastStroke: NSObject {
   var key_points: [CGVector] = []
   var key_point_index: [Int] = []
   var key_point_geometry: [Geometry] = []
+  var key_point_type: [Bool] = []
   
   func start_stroke(pos: CGPoint, force: CGFloat){
     points.append(CGVector(point: pos))
@@ -231,6 +232,80 @@ class FastStroke: NSObject {
     for p in key_points {
       key_point_geometry.append(circleGeometry(pos: p, radius:2, color: [1,0,0,1]))
       key_point_index.append(get_key_point_index(pos: p))
+    }
+    
+    key_point_type = []
+    // Classify keypoints
+    for i in key_point_index {
+      
+      var isCorner = false;
+      
+      if i == 0 || i == points.count - 1 {
+        isCorner = true;
+      } else {
+        let a = points[i-1]
+        let b = points[i]
+        let c = points[i+1]
+        let distance = (a - b).length()
+    
+        if(distance < 0.5) {
+          isCorner = true
+        }
+        
+      }
+      
+      key_point_type.append(isCorner)
+    }
+    
+    print("keypoint")
+    dump(key_point_type)
+    
+//    let kp = RDP_Simplify_Two(line: points)
+//    for p in kp {
+//      key_point_geometry.append(circleGeometry(pos: p.position, radius:2, color: [1,0,0,1]))
+//    }
+    
+    //dump(kp)
+  }
+  
+  
+  func drag_with_falloff(index: Int, new_pos: CGVector) {
+    let point_index = key_point_index[index]
+    let diff = new_pos - points[point_index]
+    
+    //find closest corners
+    var left_corner = index-1
+    var right_corner = index+1
+    
+    while key_point_type[left_corner] == false && left_corner > 0 {
+      left_corner -= 1;
+    }
+    
+    while key_point_type[right_corner] == false && right_corner < key_point_type.count - 1 {
+      right_corner += 1;
+    }
+    
+ 
+    
+    
+    let left_corner_index = key_point_index[left_corner]
+    let right_corner_index = key_point_index[right_corner]
+    
+    let len = right_corner_index - left_corner_index
+    let half_len = len / 2
+    let len_sq = half_len * half_len
+    
+    print("corners")
+    print(left_corner)
+    print(right_corner)
+    print(half_len)
+    
+    for i in left_corner_index+1..<right_corner_index {
+      let j = i - point_index
+      let scale = CGFloat(1) - (CGFloat(j*j) / CGFloat(len_sq))
+      //if j > 0 && j < points.count-1 {
+        points[i] = points[i] + diff * scale
+      //}
     }
   }
 }

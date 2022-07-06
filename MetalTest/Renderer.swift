@@ -67,6 +67,10 @@ class Renderer: NSObject {
     metalView.clearColor = MTLClearColor(red: 0.9921568627, green: 0.9882352941, blue: 0.9843137255, alpha: 1.0) // Off white
     metalView.sampleCount = MSAA
     
+//    print(device.supportsTextureSampleCount(4))
+//    print(device.supportsTextureSampleCount(8))
+//    print(device.supportsTextureSampleCount(16))
+    
   }
   
   private func createBuffers(){

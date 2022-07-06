@@ -64,8 +64,8 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
       f.start_stroke(pos: pos, force: force)
       fast_strokes.append(f)
       mode = 0
-    } else if fingers == 1 {
-      mode = 1
+    } else if fingers >= 1 {
+      mode = fingers
       
       var closestStroke = -1;
       var closestPoint = -1;
@@ -83,8 +83,6 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
       }
       moving_stroke = closestStroke
       moving_point = closestPoint
-    } else if fingers == 2 {
-      mode = 2
     }
     
   }
@@ -93,25 +91,28 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
     if mode == 0 {
       fast_strokes.last!.add_stroke_point(pos: pos, force: force)
     } else if mode == 1 {
+      print(moving_stroke);
       fast_strokes[moving_stroke].drag_key_point(index: moving_point, new_pos: CGVector(point: pos))
       fast_strokes[moving_stroke].recompute_geometry()
     } else if mode == 2 {
-      for s in fast_strokes {
-        var didchange = false
-        for i in 0..<s.points.count {
-          let cp = s.points[i]
-          let diff = (cp - CGVector(point: pos))
-          let len = diff.lengthSquared()
-          if(len < 2000) {
-            let new_pos = cp + diff * (1 / len) * 5
-            s.points[i] = new_pos
-            didchange = true
-          }
-        }
-        if didchange == true {
-          s.recompute_geometry()
-        }
-      }
+      fast_strokes[moving_stroke].drag_with_falloff(index: moving_point, new_pos: CGVector(point: pos))
+      fast_strokes[moving_stroke].recompute_geometry()
+//      for s in fast_strokes {
+//        var didchange = false
+//        for i in 0..<s.points.count {
+//          let cp = s.points[i]
+//          let diff = (cp - CGVector(point: pos))
+//          let len = diff.lengthSquared()
+//          if(len < 2000) {
+//            let new_pos = cp + diff * (1 / len) * 5
+//            s.points[i] = new_pos
+//            didchange = true
+//          }
+//        }
+//        if didchange == true {
+//          s.recompute_geometry()
+//        }
+//      }
     }
       
 //      for (i, s) in fast_strokes.enumerated() {
@@ -189,9 +190,9 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
     renderer.clearBuffer()
     for stroke in fast_strokes {
       renderer.addStrokeData(data: stroke.geometry)
-//      for g in stroke.key_point_geometry {
-//        renderer.addGeometry(geometry: g)
-//      }
+      for g in stroke.key_point_geometry {
+        renderer.addGeometry(geometry: g)
+      }
     }
     
     renderer.addStrokeData(data: predicted_stroke)
