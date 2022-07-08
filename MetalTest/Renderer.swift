@@ -153,7 +153,7 @@ class Renderer: NSObject {
 
   // Copy new elements into buffer
   // TODO auto grow buffer size if we overflow
-  public func addGeometry(geometry: Geometry) {
+  public func addGeometry(_ geometry: Geometry) {
     
     // Copy verts
     let vertexByteOffset = MemoryLayout<Vertex>.stride * vertexBufferSize
@@ -174,12 +174,12 @@ class Renderer: NSObject {
     indexBufferSize += geometry.indices.count
   }
   
-  public func loadStrokes(data: [Vertex]) {
-    pointBuffer.contents().copyMemory(from: data, byteCount: data.count * MemoryLayout<Vertex>.stride)
-    pointBufferSize = data.count
-  }
+//  public func loadStrokes(data: [Vertex]) {
+//    pointBuffer.contents().copyMemory(from: data, byteCount: data.count * MemoryLayout<Vertex>.stride)
+//    pointBufferSize = data.count
+//  }
   
-  public func addStrokeData(data: [Vertex]) {
+  public func addStrokeData(_ data: [Vertex]) {
     let byteOffset = MemoryLayout<Vertex>.stride * pointBufferSize
     (pointBuffer.contents() + byteOffset).copyMemory(from: data, byteCount: data.count * MemoryLayout<Vertex>.stride)
     pointBufferSize += data.count

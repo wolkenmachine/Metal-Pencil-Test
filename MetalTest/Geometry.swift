@@ -84,6 +84,36 @@ func circleGeometry(pos: CGVector, radius: Float, color: [Float]) -> Geometry {
   return Geometry (verts: verts, indices: indices)
 }
 
+func lineGeometry(a: CGVector, b: CGVector, weight: CGFloat, color: [Float]) -> Geometry {
+  
+  let color = SIMD4<Float>(color[0], color[1], color[2], color[3])
+  
+  let diff = (a - b).normalized() * CGFloat(weight) // line thickness
+  let left_offset = diff.rotated90clockwise()
+  let right_offset = diff.rotated90counterclockwise()
+  
+  let la = a + left_offset
+  let ra = a + right_offset
+  let lb = b + left_offset
+  let rb = b + right_offset
+  
+  
+  var verts: [Vertex] = [
+    Vertex(position: [Float(la.dx), Float(la.dy), 0], color: color),
+    Vertex(position: [Float(ra.dx), Float(ra.dy), 0], color: color),
+    Vertex(position: [Float(lb.dx), Float(lb.dy), 0], color: color),
+    Vertex(position: [Float(rb.dx), Float(rb.dy), 0], color: color),
+  ]
+  
+  var indices: [UInt16] = [
+    0,1,2,
+    2,3,1,
+  ]
+  
+  return Geometry (verts: verts, indices: indices)
+  
+}
+
 
 func strokeGeometry(points: [CGPoint], weight: Float, color: [Float]) -> Geometry {
   var verts: [Vertex] = []
@@ -133,56 +163,56 @@ func polygonGeometry(points: [CGVector]){
 
 
 //RDP Line Simplification Algorithm -- Enhanced
-struct KeyPoint {
-  var position: CGVector
-  var index: Int
-  var order: Int
-  var isCorner: Bool
-}
-
-func RDP_Simplify_Two(line:[CGVector], order: Int = 0, offset: Int = 0) -> [KeyPoint] {
-  let start = line.first!
-  let end = line.last!
-  
-  if line.count == 2 {
-    print("count == 2")
-    let a = KeyPoint(position: start, index: 0, order: order, isCorner: false)
-    let b = KeyPoint(position: end, index: line.count-1, order: order, isCorner: false)
-    return [a, b]
-  }
-  
-  var largestDistance: CGFloat = -1;
-  var furthestIndex = -1;
-  
-  for i in 1..<line.count {
-    let point = line[i]
-    let dist = PointLineDistance(p:point, a:start, b:end)
-    if dist > largestDistance {
-      largestDistance = dist
-      furthestIndex = i
-    }
-  }
-  
-  if(largestDistance > 5) {
-    print("split", order)
-    let a = KeyPoint(position: start, index: offset, order: order, isCorner: false)
-    let b = KeyPoint(position: line[furthestIndex], index: furthestIndex, order: order+1, isCorner: false)
-    let c = KeyPoint(position: end, index: offset + line.count-1, order: order, isCorner: false)
-    //return [a, b, c]
-    
-    let segment_a = RDP_Simplify_Two(line: Array(line[...furthestIndex]), order: order+1, offset: offset)
-    let segment_b = RDP_Simplify_Two(line: Array(line[furthestIndex...]), order: order+1, offset: offset+furthestIndex)
-
-    let a_end = segment_a.count-1
-    let b_end = segment_b.count-1
-    return [a] + Array(segment_a[1..<a_end]) + [b] + Array(segment_b[1..<b_end]) + [c]
-  }
-  
-  print("no split", order)
-  let a = KeyPoint(position: start, index: offset, order: order, isCorner: false)
-  let c = KeyPoint(position: end, index: offset + line.count-1, order: order, isCorner: false)
-  return [a, c]
-}
+//struct KeyPoint {
+//  var position: CGVector
+//  var index: Int
+//  var order: Int
+//  var isCorner: Bool
+//}
+//
+//func RDP_Simplify_Two(line:[CGVector], order: Int = 0, offset: Int = 0) -> [KeyPoint] {
+//  let start = line.first!
+//  let end = line.last!
+//  
+//  if line.count == 2 {
+//    print("count == 2")
+//    let a = KeyPoint(position: start, index: 0, order: order, isCorner: false)
+//    let b = KeyPoint(position: end, index: line.count-1, order: order, isCorner: false)
+//    return [a, b]
+//  }
+//  
+//  var largestDistance: CGFloat = -1;
+//  var furthestIndex = -1;
+//  
+//  for i in 1..<line.count {
+//    let point = line[i]
+//    let dist = PointLineDistance(p:point, a:start, b:end)
+//    if dist > largestDistance {
+//      largestDistance = dist
+//      furthestIndex = i
+//    }
+//  }
+//  
+//  if(largestDistance > 5) {
+//    print("split", order)
+//    let a = KeyPoint(position: start, index: offset, order: order, isCorner: false)
+//    let b = KeyPoint(position: line[furthestIndex], index: furthestIndex, order: order+1, isCorner: false)
+//    let c = KeyPoint(position: end, index: offset + line.count-1, order: order, isCorner: false)
+//    //return [a, b, c]
+//    
+//    let segment_a = RDP_Simplify_Two(line: Array(line[...furthestIndex]), order: order+1, offset: offset)
+//    let segment_b = RDP_Simplify_Two(line: Array(line[furthestIndex...]), order: order+1, offset: offset+furthestIndex)
+//
+//    let a_end = segment_a.count-1
+//    let b_end = segment_b.count-1
+//    return [a] + Array(segment_a[1..<a_end]) + [b] + Array(segment_b[1..<b_end]) + [c]
+//  }
+//  
+//  print("no split", order)
+//  let a = KeyPoint(position: start, index: offset, order: order, isCorner: false)
+//  let c = KeyPoint(position: end, index: offset + line.count-1, order: order, isCorner: false)
+//  return [a, c]
+//}
 
 //func CreateKeyPoint(line: [CGVector], position: Int, order: Int) -> KeyPoint {
 //  var corner = false;

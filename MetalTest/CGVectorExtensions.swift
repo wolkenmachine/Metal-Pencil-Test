@@ -79,6 +79,15 @@ public extension CGVector {
     return atan2(dy, dx)
   }
   
+  func angleBetween(_ other: CGVector) -> CGFloat {
+    let len_a = self.length()
+    let len_b = other.length()
+    
+    
+    let angle = acos((dot(self, other)) / (len_a * len_b))
+    return angle
+  }
+  
   /**
    * Returns a vector that is rotated 90 degrees clockwise
    */
@@ -196,6 +205,39 @@ public func lerp(start: CGVector, end: CGVector, t: CGFloat) -> CGVector {
 
 public func dot(_ a: CGVector, _ b: CGVector) -> CGFloat {
   return a.dx * b.dx + a.dy * b.dy
+}
+
+public func line_line_intersection(_ a: CGVector, _ b: CGVector, _ c: CGVector, _ d: CGVector) -> CGVector? {
+  
+  let x1 = a.dx
+  let y1 = a.dy
+  let x2 = b.dx
+  let y2 = b.dy
+  let x3 = c.dx
+  let y3 = c.dy
+  let x4 = d.dx
+  let y4 = d.dy
+  
+  let x12 = x1 - x2;
+  let x34 = x3 - x4;
+  let y12 = y1 - y2;
+  let y34 = y3 - y4;
+
+  let div = x12 * y34 - y12 * x34;
+
+  if (abs(div) < 0.2) {
+    return nil;
+  }
+  else {
+    // Intersection
+    let a = x1 * y2 - y1 * x2;
+    let b = x3 * y4 - y3 * x4;
+
+    let x = (a * x34 - b * x12) / div;
+    let y = (a * y34 - b * y12) / div;
+
+    return CGVector(dx: x, dy: y);
+  }
 }
 
 //public func cross(_ a: CGVector, _ b: CGVector) -> CGFloat {

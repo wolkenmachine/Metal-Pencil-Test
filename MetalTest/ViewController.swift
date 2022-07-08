@@ -45,157 +45,115 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
   // THIS IS WHERE THE MAGIC HAPPEN 👇
   
   // Compute stroke
-  var predicted_stroke: [Vertex] = []
-  var fast_strokes: [FastStroke] = []
+  var drawing_stroke: DrawingStroke? = nil
+  var morphable_strokes: [MorphableStroke] = []
   
-  var fingers = 0;
-  var mode = -1;
-  var moving_stroke = -1;
-  var moving_point = -1;
   
   func setup(){
   }
   
   // Pencil event handlers
   func onPencilDown(pos: CGPoint, force: CGFloat){
-    
-    if fingers == 0 {
-      let f = FastStroke()
-      f.start_stroke(pos: pos, force: force)
-      fast_strokes.append(f)
-      mode = 0
-    } else if fingers >= 1 {
-      mode = fingers
-      
-      var closestStroke = -1;
-      var closestPoint = -1;
-      var closestDistance = CGFloat(100000);
-      
-      for (i, s) in fast_strokes.enumerated() {
-        for (j, p) in s.key_points.enumerated() {
-          let dist = (p - CGVector(point: pos)).length()
-          if dist < closestDistance  {
-            closestStroke = i
-            closestPoint = j
-            closestDistance = dist
-          }
-        }
-      }
-      moving_stroke = closestStroke
-      moving_point = closestPoint
-    }
-    
+    drawing_stroke = DrawingStroke()
+    drawing_stroke!.start(pos: pos, force: force)
   }
   
   func onPencilMove(pos: CGPoint, force: CGFloat){
-    if mode == 0 {
-      fast_strokes.last!.add_stroke_point(pos: pos, force: force)
-    } else if mode == 1 {
-      print(moving_stroke);
-      fast_strokes[moving_stroke].drag_key_point(index: moving_point, new_pos: CGVector(point: pos))
-      fast_strokes[moving_stroke].recompute_geometry()
-    } else if mode == 2 {
-      fast_strokes[moving_stroke].drag_with_falloff(index: moving_point, new_pos: CGVector(point: pos))
-      fast_strokes[moving_stroke].recompute_geometry()
-//      for s in fast_strokes {
-//        var didchange = false
-//        for i in 0..<s.points.count {
-//          let cp = s.points[i]
-//          let diff = (cp - CGVector(point: pos))
-//          let len = diff.lengthSquared()
-//          if(len < 2000) {
-//            let new_pos = cp + diff * (1 / len) * 5
-//            s.points[i] = new_pos
-//            didchange = true
-//          }
-//        }
-//        if didchange == true {
-//          s.recompute_geometry()
-//        }
-//      }
+    if let s = drawing_stroke {
+      print("pencilmove")
+      s.add_point(pos: pos, force: force)
     }
-      
-//      for (i, s) in fast_strokes.enumerated() {
-//        var didchange = false
-//        for (j, p) in s.key_points.enumerated() {
-//
-//          let cp = s.points[s.key_point_index[j]]
-//
-//          let diff = (CGVector(point: pos) - cp)
-//          let len = diff.lengthSquared()
-//          //if(len < 100) {
-//            let new_pos = cp + diff * (1 / len) * 10
-//            fast_strokes[i].drag_key_point(index: j, new_pos: new_pos)
-//            didchange = true
-//          //}
-//        }
-//        if didchange == true {
-//          fast_strokes[i].recompute_geometry()
-//        }
-//      }
-//    }
   }
   
   func onPencilPredicted(pos: CGPoint, force: CGFloat){
-    if mode == 0 {
-      predicted_stroke.append(Vertex(
-        position: SIMD3<Float>(Float(pos.x), Float(pos.y), Float(force)),
-        color: SIMD4<Float>(0,0,0,1)
-      ))
+    if let s = drawing_stroke {
+      s.add_predicted_point(pos: pos, force: force)
     }
-    
   }
   
   func onPencilUp(pos: CGPoint, force: CGFloat){
-    if mode == 0 {
-      fast_strokes.last!.end_stroke(pos: pos, force: force)
-      //fast_strokes.last!.compute_key_points()
-    } else if mode == 1 {
-      //fast_strokes[moving_stroke].compute_key_points()
-    }
-    for (i, s) in fast_strokes.enumerated() {
-      s.compute_key_points()
-    }
-    mode = -1
+    let new_stroke = MorphableStroke(drawing_stroke!)
+    morphable_strokes.append(new_stroke)
+    drawing_stroke = nil
   }
-  
-  var selected_points: [(Int, Int)] = []
   
   func onTouchDown(pos: CGPoint){
-    fingers += 1;
   }
   
-  func onTouchMove(pos: CGPoint){
-//    let index = fast_strokes.last!.get_key_point_index(pos: fast_strokes.last!.key_points.last!)
-//    fast_strokes.last!.drag_key_point(index: index, new_pos: CGVector(point: pos))
-//    fast_strokes.last!.recompute_geometry()
-//    fast_strokes.last!.compute_key_points()
-  }
+  func onTouchMove(pos: CGPoint){}
   
-  func onTouchPredicted(pos: CGPoint){
-  }
+  func onTouchPredicted(pos: CGPoint){}
   
-  func onTouchUp(pos: CGPoint){
-    fingers -= 1;
-  }
+  func onTouchUp(pos: CGPoint){}
   
   // Draw Loop
   func draw(){
     let fps = (1000 / (Date().timeIntervalSince(previousFrameTime) * 1000)).rounded()
     previousFrameTime = Date()
-    debugInfo.text = "FPS: \(fps)\nFINGERS: \(fingers)"
-    
+    debugInfo.text = "FPS: \(fps)\n"
     
     // Reset the render buffer
     renderer.clearBuffer()
-    for stroke in fast_strokes {
-      renderer.addStrokeData(data: stroke.geometry)
-      for g in stroke.key_point_geometry {
-        renderer.addGeometry(geometry: g)
+    
+    let green: [Float] = [0,1,0,1]
+    let blue: [Float] = [0,0,1,1]
+    let red: [Float] = [1,0,0,1]
+    // Morphable strokes
+    for s in morphable_strokes {
+      renderer.addStrokeData(s.geometry)
+      
+      // Keypoints
+      for (i, key_point) in s.key_points.enumerated() {
+        let color = key_point.corner ? green : red
+        
+        renderer.addGeometry(circleGeometry(pos: key_point.point, radius: 3.0, color: color))
+        
+        renderer.addGeometry(lineGeometry(
+          a: key_point.point + key_point.tangent_upstream * 5.0,
+          b: key_point.point,
+          weight: 1.0, color: color
+        ))
+
+        renderer.addGeometry(lineGeometry(
+          a: key_point.point + key_point.tangent_downstream * 5.0,
+          b: key_point.point,
+          weight: 1.0, color: color
+        ))
       }
+      
+//      if s.control_points.count > 1 {
+//        renderer.addGeometry(lineGeometry(
+//          a: s.points[0],
+//          b: s.control_points[0],
+//          weight: 0.5, color: blue
+//        ))
+//
+//        renderer.addGeometry(lineGeometry(
+//          a: s.points.last!,
+//          b: s.control_points.last!,
+//          weight: 0.5, color: blue
+//        ))
+//
+//        for i in 0..<s.control_points.count-1 {
+//          renderer.addGeometry(lineGeometry(
+//            a: s.control_points[i],
+//            b: s.control_points[i+1],
+//            weight: 0.5, color: blue
+//          ))
+//        }
+//      }
+      
+//      for cp in s.control_points {
+//        renderer.addGeometry(circleGeometry(pos: cp, radius: 2.0, color: blue))
+//      }
     }
     
-    renderer.addStrokeData(data: predicted_stroke)
-    predicted_stroke = []
+    // Drawing stroke
+    if let s = drawing_stroke {
+      renderer.addStrokeData(s.get_geometry())
+    }
+    
+    // Key points
+    
   }
 }
