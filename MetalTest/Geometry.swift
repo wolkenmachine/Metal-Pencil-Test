@@ -66,8 +66,7 @@ func circleGeometry(pos: CGVector, radius: Float, color: [Float]) -> Geometry {
   let y = Float(pos.dy)
   
   // Draw anti_alisassed circle
-  let base_color = SIMD4<Float>(color[0], color[1], color[2], 1)
-  let transparent_color = SIMD4<Float>(color[0], color[1], color[2], 0)
+  let base_color = SIMD4<Float>(color[0], color[1], color[2], color[3])
   
   verts.append(Vertex(position: SIMD3<Float>(x, y, 0), color: base_color))
   
