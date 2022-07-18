@@ -240,6 +240,7 @@ public func line_line_intersection(_ a: CGVector, _ b: CGVector, _ c: CGVector, 
   }
 }
 
-//public func cross(_ a: CGVector, _ b: CGVector) -> CGFloat {
-//  
-//}
+// This is not a "real" cross product, but it's very useful for calculating orientation
+public func cross(_ a: CGVector, _ b: CGVector) -> CGFloat {
+  return a.dx*b.dy - a.dy*b.dx
+}

@@ -74,6 +74,7 @@ class MorphableStroke {
   var key_points: [KeyPoint] = []
   var control_points: [CGVector] = []
   var chaikin_points: [CGVector] = []
+  var chaikin_segment_points: [Int] = []
   var segments: [StrokeSegment] = []
   
   var lengths: [CGFloat] = []
@@ -150,24 +151,26 @@ class MorphableStroke {
 
       if(a.corner == false && b.corner == false) {
         let l = (a.tangent_upstream - b.tangent_downstream).length()
-        print("l", l)
-        if l > 1.95 {
-          print("add midpoint", key_points.count)
-          let mid_index = (a.index + b.index) / 2
-          let mid_length = lengths[mid_index]
+        if l > 1.80 { // If the two points are roughly paralell
+          // If the points are not colinear
+          if PointLineDistance(p:b.point, a:a.point, b:a.tangent_upstream) > 10.0 {
+            print("add midpoint", key_points.count)
+            let mid_index = (a.index + b.index) / 2
+            let mid_length = lengths[mid_index]
 
-          let a = get_point_at_length(mid_length - 10)
-          let b = get_point_at_length(mid_length + 10)
-          let tangent_norm = (a-b).normalized()
+            let a = get_point_at_length(mid_length - 10)
+            let b = get_point_at_length(mid_length + 10)
+            let tangent_norm = (a-b).normalized()
 
-          key_points.insert(KeyPoint(
-            point: points[mid_index],
-            index: mid_index,
-            corner: false,
-            tangent_upstream: tangent_norm,
-            tangent_downstream: CGVector(dx: 0.0, dy: 0.0) - tangent_norm
-          ), at: i+1)
-          i+=1
+            key_points.insert(KeyPoint(
+              point: points[mid_index],
+              index: mid_index,
+              corner: false,
+              tangent_upstream: tangent_norm,
+              tangent_downstream: CGVector(dx: 0.0, dy: 0.0) - tangent_norm
+            ), at: i+1)
+            i+=1
+          }
         }
       }
       i+=1
@@ -194,7 +197,7 @@ class MorphableStroke {
 
     
     // Compute approximate Chaikin curve
-    var chaikin_segment_points: [Int] = []
+    chaikin_segment_points = []
     var last_chaikin_point = -1;
     if(control_points.count > 0) {
       chaikin_points = [points.first!] + compute_chaikin_points(points: control_points) + [points.last!]
@@ -211,9 +214,11 @@ class MorphableStroke {
           }
         }
         
+        // Guard against decreasing points
         if closest_point < last_chaikin_point {
           closest_point = last_chaikin_point
         }
+        
         last_chaikin_point = closest_point
         chaikin_segment_points.append(closest_point)
       }
@@ -235,11 +240,11 @@ class MorphableStroke {
       
     // Split into segments
     if chaikin_segment_points.count > 0 {
-      for i in 0..<chaikin_segment_points.count-1 {
-        let kpa = chaikin_segment_points[i]
-        let kpb = chaikin_segment_points[i+1]
-        segments.append(StrokeSegment(Array(points[kpa...kpb])))
-      }
+//      for i in 0..<chaikin_segment_points.count-1 {
+//        let kpa = chaikin_segment_points[i]
+//        let kpb = chaikin_segment_points[i+1]
+//        segments.append(StrokeSegment(Array(points[kpa...kpb])))
+//      }
     } else {
       for i in 0..<key_points.count-1 {
         let kpa = key_points[i].index
@@ -259,17 +264,35 @@ class MorphableStroke {
     }
     
     print("deltas", deltas)
-    
     for i in 0...deltas.count - 2 {
       let start_delta = deltas[i]
       let end_delta = deltas[i+1]
       
-      let segment = segments[i]
-      segment.drag_points(new_start: segment.start + start_delta , new_end: segment.end + end_delta)
+      let start_point = chaikin_segment_points[i]
+      let end_point = chaikin_segment_points[i+1]
+      let segment_n_points = end_point - start_point
+      
+      for j in 0..<segment_n_points {
+        let proportion = CGFloat(j) / CGFloat(segment_n_points)
+        
+        print("proportion", proportion)
+        let inv_proportion = CGFloat(1) - proportion
+        let point_index = start_point + j
+        points[point_index] = points[point_index] + (start_delta * inv_proportion) + (end_delta * proportion)
+      }
     }
     
+//    for i in 0...deltas.count - 2 {
+//      let start_delta = deltas[i]
+//      let end_delta = deltas[i+1]
+//
+//      let segment = segments[i]
+//      segment.drag_points(new_start: segment.start + start_delta , new_end: segment.end + end_delta)
+//    }
+    
     chaikin_points = new_chaikin_points
-    recompute_geometry_from_segments()
+    //recompute_geometry_from_segments()
+    recompute_geometry()
   }
   
   func drag_key_point(_ index: Int, _ pos: CGVector) {
@@ -427,7 +450,7 @@ func SimplifyStroke(line:[CGVector], epsilon: CGFloat) -> [CGVector] {
   return [start, end]
 }
 
-func compute_chaikin_points(points: [CGVector], depth: Int = 3) -> [CGVector] {
+func compute_chaikin_points(points: [CGVector], depth: Int = 2) -> [CGVector] {
   var chaikin_points: [CGVector] = []
   
   for i in 0..<points.count-1 {

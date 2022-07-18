@@ -8,11 +8,11 @@
 import Foundation
 import UIKit
 
-let circleFactor = (Float.pi*2)/32
+let circleFactor = (Float.pi*2)/16
 var circlePoints: [SIMD3<Float>] = []
 
 func precomputeCircle() {
-  for i in 0...31 {
+  for i in 0..<16 {
     circlePoints.append(SIMD3<Float>(cos(Float(i)*circleFactor) , sin(Float(i)*circleFactor), 0))
   }
 }
@@ -74,10 +74,10 @@ func circleGeometry(pos: CGVector, radius: Float, color: [Float]) -> Geometry {
     verts.append(Vertex(position: SIMD3<Float>(x + v.x*radius , y + v.y*radius, 0), color: base_color))
   }
   
-  for i in 0...31 {
+  for i in 0..<16 {
     indices.append(UInt16(0))
-    indices.append(UInt16((i%32)+1))
-    indices.append(UInt16((i+1)%32+1))
+    indices.append(UInt16((i%16)+1))
+    indices.append(UInt16((i+1)%16+1))
   }
   
   return Geometry (verts: verts, indices: indices)
@@ -160,6 +160,112 @@ func polygonGeometry(points: [CGVector]){
   
 }
 
+func triangulate(_ points: [CGVector]) -> [Int] {
+  if points.count < 3 {
+    return []
+  }
+  
+  // Should be sure that lines don't overlap (No figure 8 for example)
+  // Edges shouldn't be colinear (We can remove those up front)
+  // Winding order should be clockwise
+  
+  
+  var indices: [Int] = Array(0..<points.count)
+  var triangles: [Int] = []
+  
+  print("indices", indices)
+  
+  while indices.count > 3 {
+    for i in 0..<indices.count {
+      let a = indices[i]
+      let b = getCycleElement(indices, i-1)
+      let c = getCycleElement(indices, i+1)
+      
+      print("trying", a,b,c)
+      
+      let va = points[a]
+      let vb = points[b]
+      let vc = points[c]
+      
+      let vab = vb - va
+      let vac = vc - va
+      
+      // Check if ear is Convex or Reflex, if reflex skip
+      print("checking convexity")
+      if cross(vac, vab) < 0 {
+        continue;
+      }
+      
+      print("convex")
+      
+      // Check if anything lies inside of this triangle
+      var isEar = true;
+      
+      print("checking is ear")
+      for j in 0..<indices.count {
+        if j == a || j == b || j == c {
+          continue
+        }
+        
+        let p = points[j]
+        if isPointInTriangle(p: p, a: vb, b: va, c: vc) {
+          isEar = false
+          break
+        }
+      }
+      
+      // If it is an ear, add it to the triangle list
+      if isEar {
+        print("isEar")
+        triangles.append(b)
+        triangles.append(a)
+        triangles.append(c)
+        indices.remove(at: i)
+        break
+      }
+    }
+  }
+  
+  triangles.append(indices[0])
+  triangles.append(indices[1])
+  triangles.append(indices[2])
+  
+  
+  return triangles
+}
+
+
+
+func getCycleElement(_ points: [Int], _ index: Int) -> Int {
+  if index >= points.count {
+    return points[index % points.count]
+  } else if index < 0 {
+    return points[index % points.count + points.count]
+  } else {
+    return points[index]
+  }
+}
+
+
+func isPointInTriangle(p: CGVector, a: CGVector, b: CGVector, c: CGVector) -> Bool {
+  let ab = b - a
+  let bc = c - b
+  let ca = a - c
+  
+  let ap = p - a
+  let bp = p - b
+  let cp = p - c
+  
+  let cross1 = cross(ab, ap)
+  let cross2 = cross(bc, bp)
+  let cross3 = cross(ca, cp)
+  
+  if cross1 > 0 || cross2 > 0 || cross3 > 0 {
+    return false
+  }
+  
+  return true
+}
 
 //RDP Line Simplification Algorithm -- Enhanced
 //struct KeyPoint {

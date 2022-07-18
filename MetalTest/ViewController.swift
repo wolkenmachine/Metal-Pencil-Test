@@ -57,10 +57,24 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
   var second_dragging_keypoint_id = -1;
   var dragging_type = 0;
   
-  var pencilPos = CGVector(dx: 0, dy: 0)
+  var pencilPos = CGVector(dx: 100, dy: 100)
   var pencilDownPos = CGVector(dx: 0, dy: 0)
   
+  var debug_view = false;
+  
   func setup(){
+    
+    print("triangulating")
+    
+    let triangles = triangulate([
+      CGVector(dx: 0, dy: 0),
+      CGVector(dx: 10, dy: 0),
+      CGVector(dx: 15, dy: 5),
+      CGVector(dx: 10, dy: 10),
+      CGVector(dx: 0, dy: 10)
+    ])
+    
+    print("triangles", triangles)
   }
   
   // Pencil event handlers
@@ -168,6 +182,10 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
   
   func onTouchDown(pos: CGPoint){
     fingers += 1;
+    
+    if(fingers == 4) {
+      debug_view = !debug_view
+    }
   }
   
   func onTouchMove(pos: CGPoint){}
@@ -186,10 +204,12 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
     
     // Reset the render buffer
     renderer.clearBuffer()
-  
+    
+    
     let green: [Float] = [0,1,0,1]
     let blue: [Float] = [0,0,1,1]
     let red: [Float] = [1,0,0,1]
+
     
     if(mode != -1 ){
       //print(pencilPos)
@@ -201,23 +221,27 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
       renderer.addStrokeData(s.geometry)
       
       // Keypoints
-      for (i, key_point) in s.key_points.enumerated() {
-        let color = key_point.corner ? green : red
+      if debug_view {
+        renderer.addGeometry(circleGeometry(pos: pencilPos, radius: 5.0, color: [1,0,0,0.5]))
         
-        renderer.addGeometry(circleGeometry(pos: key_point.point, radius: 3.0, color: color))
-        
-        renderer.addGeometry(lineGeometry(
-          a: key_point.point + key_point.tangent_upstream * 10.0,
-          b: key_point.point,
-          weight: 1.0, color: color
-        ))
+        for (i, key_point) in s.key_points.enumerated() {
+          let color = key_point.corner ? green : red
+          
+          renderer.addGeometry(circleGeometry(pos: key_point.point, radius: 3.0, color: color))
+          
+          renderer.addGeometry(lineGeometry(
+            a: key_point.point + key_point.tangent_upstream * 10.0,
+            b: key_point.point,
+            weight: 1.0, color: color
+          ))
 
-        renderer.addGeometry(lineGeometry(
-          a: key_point.point + key_point.tangent_downstream * 10.0,
-          b: key_point.point,
-          weight: 1.0, color: color
-        ))
-      }
+          renderer.addGeometry(lineGeometry(
+            a: key_point.point + key_point.tangent_downstream * 10.0,
+            b: key_point.point,
+            weight: 1.0, color: color
+          ))
+        }
+
       
 //      if s.control_points.count > 1 {
 //        renderer.addGeometry(lineGeometry(
@@ -241,12 +265,14 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
 //        }
 //      }
       
-      for cp in s.control_points {
-        renderer.addGeometry(circleGeometry(pos: cp, radius: 2.0, color: blue))
-      }
-      
-      for cp in s.chaikin_points {
-        renderer.addGeometry(circleGeometry(pos: cp, radius: 1.0, color: red))
+
+        for cp in s.control_points {
+          renderer.addGeometry(circleGeometry(pos: cp, radius: 2.0, color: blue))
+        }
+        
+        for cp in s.chaikin_points {
+          renderer.addGeometry(circleGeometry(pos: cp, radius: 1.0, color: red))
+        }
       }
     }
     
