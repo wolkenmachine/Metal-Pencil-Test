@@ -10,6 +10,7 @@
 		1F13FD14286C578500B3699C /* Compute.metal in Sources */ = {isa = PBXBuildFile; fileRef = 1F13FD13286C578500B3699C /* Compute.metal */; };
 		1F45A6672865ECBA00C649D7 /* Geometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F45A6662865ECBA00C649D7 /* Geometry.swift */; };
 		1F45A6692865F39400C649D7 /* Drawing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F45A6682865F39400C649D7 /* Drawing.swift */; };
+		1F4C2EE528857115007EB29C /* Stroke.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4C2EE428857115007EB29C /* Stroke.swift */; };
 		1FA2CB4F2862091900D06E38 /* CGVectorExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA2CB4E2862091800D06E38 /* CGVectorExtensions.swift */; };
 		1FD8E5C5286F3117002EA9DE /* TransformMatrix.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD8E5C4286F3117002EA9DE /* TransformMatrix.swift */; };
 		1FE37ABE2860ACA900DBE6F4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE37ABD2860ACA900DBE6F4 /* AppDelegate.swift */; };
@@ -27,6 +28,7 @@
 		1F13FD13286C578500B3699C /* Compute.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Compute.metal; sourceTree = "<group>"; };
 		1F45A6662865ECBA00C649D7 /* Geometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Geometry.swift; sourceTree = "<group>"; };
 		1F45A6682865F39400C649D7 /* Drawing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Drawing.swift; sourceTree = "<group>"; };
+		1F4C2EE428857115007EB29C /* Stroke.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stroke.swift; sourceTree = "<group>"; };
 		1FA2CB4E2862091800D06E38 /* CGVectorExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CGVectorExtensions.swift; sourceTree = "<group>"; };
 		1FA2CB5228648F6E00D06E38 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		1FD8E5C4286F3117002EA9DE /* TransformMatrix.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransformMatrix.swift; sourceTree = "<group>"; };
@@ -83,6 +85,7 @@
 				1FE37AD52860C7AB00DBE6F4 /* MultiGestureRecognizer.swift */,
 				1F45A6662865ECBA00C649D7 /* Geometry.swift */,
 				1F45A6682865F39400C649D7 /* Drawing.swift */,
+				1F4C2EE428857115007EB29C /* Stroke.swift */,
 				1FE37AD32860B61000DBE6F4 /* Shader.metal */,
 				1F13FD13286C578500B3699C /* Compute.metal */,
 				1FE37AC32860ACA900DBE6F4 /* Main.storyboard */,
@@ -171,6 +174,7 @@
 				1FE37ABE2860ACA900DBE6F4 /* AppDelegate.swift in Sources */,
 				1FE37AD62860C7AB00DBE6F4 /* MultiGestureRecognizer.swift in Sources */,
 				1FE37AD42860B61000DBE6F4 /* Shader.metal in Sources */,
+				1F4C2EE528857115007EB29C /* Stroke.swift in Sources */,
 				1FD8E5C5286F3117002EA9DE /* TransformMatrix.swift in Sources */,
 				1F13FD14286C578500B3699C /* Compute.metal in Sources */,
 				1F45A6672865ECBA00C649D7 /* Geometry.swift in Sources */,

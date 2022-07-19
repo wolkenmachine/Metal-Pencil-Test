@@ -45,156 +45,167 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
   // THIS IS WHERE THE MAGIC HAPPEN 👇
   
   // Compute stroke
-  var predicted_stroke: [Vertex] = []
-  var fast_strokes: [FastStroke] = []
+  var done_strokes: [TapeStroke] = []
+  
+  var tape_stroke: TapeStroke? = nil
+  var string_stroke: StringStroke? = nil
   
   var fingers = 0;
-  var mode = -1;
-  var moving_stroke = -1;
-  var moving_point = -1;
+  var fingerDown = CGVector(dx:0,dy:0)
+  var fingerDropped = CGVector(dx:0,dy:0)
+  
+  var pencilDown = CGVector(dx:0,dy:0)
+  
+  var fingerDownTimer = 0
+  
+  var mode = "Tape"
   
   func setup(){
   }
   
   // Pencil event handlers
   func onPencilDown(pos: CGPoint, force: CGFloat){
-    
-    if fingers == 0 {
-      let f = FastStroke()
-      f.start_stroke(pos: pos, force: force)
-      fast_strokes.append(f)
-      mode = 0
-    } else if fingers == 1 {
-      mode = 1
-      
-      var closestStroke = -1;
-      var closestPoint = -1;
-      var closestDistance = CGFloat(100000);
-      
-      for (i, s) in fast_strokes.enumerated() {
-        for (j, p) in s.key_points.enumerated() {
-          let dist = (p - CGVector(point: pos)).length()
-          if dist < closestDistance  {
-            closestStroke = i
-            closestPoint = j
-            closestDistance = dist
-          }
-        }
+    var down = CGVector(point: pos)
+    if mode == "Tape" {
+      if (fingerDown - down).length() < 100 {
+        tape_stroke = TapeStroke(down)
       }
-      moving_stroke = closestStroke
-      moving_point = closestPoint
-    } else if fingers == 2 {
-      mode = 2
+    } else if mode == "String" {
+      if (fingerDown - down).length() < 100 {
+        string_stroke = StringStroke(down)
+      }
+    } else if mode == "InvTape" {
+      if (fingerDown - down).length() < 100 {
+        tape_stroke = TapeStroke(down)
+      }
     }
-    
   }
   
   func onPencilMove(pos: CGPoint, force: CGFloat){
-    if mode == 0 {
-      fast_strokes.last!.add_stroke_point(pos: pos, force: force)
-    } else if mode == 1 {
-      fast_strokes[moving_stroke].drag_key_point(index: moving_point, new_pos: CGVector(point: pos))
-      fast_strokes[moving_stroke].recompute_geometry()
-    } else if mode == 2 {
-      for s in fast_strokes {
-        var didchange = false
-        for i in 0..<s.points.count {
-          let cp = s.points[i]
-          let diff = (cp - CGVector(point: pos))
-          let len = diff.lengthSquared()
-          if(len < 2000) {
-            let new_pos = cp + diff * (1 / len) * 5
-            s.points[i] = new_pos
-            didchange = true
-          }
-        }
-        if didchange == true {
-          s.recompute_geometry()
-        }
+    pencilDown = CGVector(point: pos)
+    
+    if mode == "Tape" {
+      if let tape_stroke = tape_stroke {
+        tape_stroke.move_pencil(CGVector(point: pos))
+        tape_stroke.move_finger(fingerDown)
+      }
+    } else if mode == "String" {
+      if let string_stroke = string_stroke {
+        string_stroke.move_pencil(CGVector(point: pos))
+      }
+    } else if mode == "InvTape" {
+      if let tape_stroke = tape_stroke {
+        tape_stroke.move_finger(CGVector(point: pos))
+        tape_stroke.move_pencil(fingerDown)
       }
     }
-      
-//      for (i, s) in fast_strokes.enumerated() {
-//        var didchange = false
-//        for (j, p) in s.key_points.enumerated() {
-//
-//          let cp = s.points[s.key_point_index[j]]
-//
-//          let diff = (CGVector(point: pos) - cp)
-//          let len = diff.lengthSquared()
-//          //if(len < 100) {
-//            let new_pos = cp + diff * (1 / len) * 10
-//            fast_strokes[i].drag_key_point(index: j, new_pos: new_pos)
-//            didchange = true
-//          //}
-//        }
-//        if didchange == true {
-//          fast_strokes[i].recompute_geometry()
-//        }
-//      }
-//    }
+
   }
   
   func onPencilPredicted(pos: CGPoint, force: CGFloat){
-    if mode == 0 {
-      predicted_stroke.append(Vertex(
-        position: SIMD3<Float>(Float(pos.x), Float(pos.y), Float(force)),
-        color: SIMD4<Float>(0,0,0,1)
-      ))
-    }
-    
+    onPencilUp(pos: pos, force: force)
   }
   
   func onPencilUp(pos: CGPoint, force: CGFloat){
-    if mode == 0 {
-      fast_strokes.last!.end_stroke(pos: pos, force: force)
-      //fast_strokes.last!.compute_key_points()
-    } else if mode == 1 {
-      //fast_strokes[moving_stroke].compute_key_points()
-    }
-    for (i, s) in fast_strokes.enumerated() {
-      s.compute_key_points()
-    }
-    mode = -1
+    
   }
   
   var selected_points: [(Int, Int)] = []
   
   func onTouchDown(pos: CGPoint){
     fingers += 1;
+    fingerDown = CGVector(point: pos)
+    fingerDropped = CGVector(point: pos)
+    fingerDownTimer = 0
+    
+    if fingers == 5 {
+      if mode == "Tape" {
+        mode = "String"
+      } else if mode == "String" {
+        mode = "InvTape"
+      } else if mode == "InvTape" {
+        mode = "Tape"
+      }
+    }
+    //tape_stroke = TapeStroke(CGVector(point: pos))
   }
   
   func onTouchMove(pos: CGPoint){
-//    let index = fast_strokes.last!.get_key_point_index(pos: fast_strokes.last!.key_points.last!)
-//    fast_strokes.last!.drag_key_point(index: index, new_pos: CGVector(point: pos))
-//    fast_strokes.last!.recompute_geometry()
-//    fast_strokes.last!.compute_key_points()
+    fingerDown = CGVector(point: pos)
+    
+    if mode == "Tape" {
+      if let tape_stroke = tape_stroke {
+        tape_stroke.move_finger(CGVector(point: pos))
+      }
+    } else if mode == "String" {
+      if (fingerDown - fingerDropped).length() > 10 {
+        if let string_stroke = string_stroke {
+          string_stroke.move_finger(CGVector(point: pos))
+        }
+      }
+    } else if mode == "InvTape" {
+      if let tape_stroke = tape_stroke {
+        tape_stroke.move_pencil(CGVector(point: pos))
+      }
+    }
   }
   
   func onTouchPredicted(pos: CGPoint){
+    onTouchMove(pos: pos)
   }
   
   func onTouchUp(pos: CGPoint){
+    
+    if let tape_stroke = tape_stroke {
+      done_strokes.append(tape_stroke)
+    }
+    
+    tape_stroke = nil
+    string_stroke = nil
     fingers -= 1;
   }
   
   // Draw Loop
   func draw(){
-    let fps = (1000 / (Date().timeIntervalSince(previousFrameTime) * 1000)).rounded()
+    let dt = Date().timeIntervalSince(previousFrameTime)
+    let fps = (1000 / dt * 1000).rounded()
     previousFrameTime = Date()
-    debugInfo.text = "FPS: \(fps)\nFINGERS: \(fingers)"
+    debugInfo.text = "FPS: \(fps)\nFINGERS: \(fingers)\n\(mode)"
     
+    if fingerDownTimer < 200 {
+      fingerDownTimer = fingerDownTimer + Int(dt*1000)
+    }
     
     // Reset the render buffer
     renderer.clearBuffer()
-    for stroke in fast_strokes {
-      renderer.addStrokeData(data: stroke.geometry)
-//      for g in stroke.key_point_geometry {
-//        renderer.addGeometry(geometry: g)
-//      }
+    
+    if let tape_stroke = tape_stroke {
+      renderer.addGeometry(geometry: tape_stroke.get_geometry())
+      if tape_stroke.trace.count > 1 {
+        renderer.addGeometry(geometry: tape_stroke.get_trace_geometry())
+      }
     }
     
-    renderer.addStrokeData(data: predicted_stroke)
-    predicted_stroke = []
+    if (fingers > 0) {
+      if let tape_stroke = tape_stroke {
+        
+        renderer.addGeometry(geometry: strokeGeometry(points: [
+          mode == "Tape" ? fingerDown: pencilDown,
+          tape_stroke.start
+        ], weight: 1.0, color: [0.5,0.1,0.1,0.1]))
+      } else {
+        renderer.addGeometry(geometry: circleGeometry(pos: fingerDown, radius: (Float(fingerDownTimer) / 200) * 100, color: [0.5,0.1,0.1,0.1]))
+      }
+    }
+    
+    if let string_stroke = string_stroke {
+      renderer.addGeometry(geometry: string_stroke.get_geometry())
+    }
+    
+    for s in done_strokes {
+      renderer.addGeometry(geometry: s.get_trace_geometry())
+    }
+    
+    
   }
 }

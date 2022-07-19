@@ -66,8 +66,7 @@ func circleGeometry(pos: CGVector, radius: Float, color: [Float]) -> Geometry {
   let y = Float(pos.dy)
   
   // Draw anti_alisassed circle
-  let base_color = SIMD4<Float>(color[0], color[1], color[2], 1)
-  let transparent_color = SIMD4<Float>(color[0], color[1], color[2], 0)
+  let base_color = SIMD4<Float>(color[0], color[1], color[2], color[3])
   
   verts.append(Vertex(position: SIMD3<Float>(x, y, 0), color: base_color))
   
@@ -85,7 +84,7 @@ func circleGeometry(pos: CGVector, radius: Float, color: [Float]) -> Geometry {
 }
 
 
-func strokeGeometry(points: [CGPoint], weight: Float, color: [Float]) -> Geometry {
+func strokeGeometry(points: [CGVector], weight: Float, color: [Float]) -> Geometry {
   var verts: [Vertex] = []
   var indices: [UInt16] = []
   var points = points
@@ -94,7 +93,7 @@ func strokeGeometry(points: [CGPoint], weight: Float, color: [Float]) -> Geometr
   let base_color = SIMD4<Float>(color[0], color[1], color[2], 1)
   let transparent_color = SIMD4<Float>(color[0], color[1], color[2], 0)
   
-  var lastPoint = CGVector(point: points[0])
+  var lastPoint = points[0]
   points.removeFirst()
   
   verts += [
@@ -103,7 +102,7 @@ func strokeGeometry(points: [CGPoint], weight: Float, color: [Float]) -> Geometr
   ]
   
   for point in points {
-    let newPoint = CGVector(point: point)
+    let newPoint = point
     let diff = (newPoint - lastPoint).normalized() * CGFloat(weight) // line thickness
     let left_offset = newPoint + diff.rotated90clockwise()
     let right_offset = newPoint + diff.rotated90counterclockwise()

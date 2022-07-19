@@ -221,9 +221,10 @@ extension Renderer: MTKViewDelegate {
     let commandEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: descriptor)!
     commandEncoder.setRenderPipelineState(pipelineState)
 
+    commandEncoder.setVertexBytes(&constants, length: MemoryLayout<Constants>.stride, index: 1)
+    
     // Draw calls
     if pointBufferSize>2 {
-      commandEncoder.setVertexBytes(&constants, length: MemoryLayout<Constants>.stride, index: 1)
       commandEncoder.setVertexBuffer(pointVertexBuffer, offset: 0, index: 0)
       commandEncoder.drawPrimitives(type: MTLPrimitiveType.triangleStrip, vertexStart: 0, vertexCount: pointBufferSize*2-2)
 
