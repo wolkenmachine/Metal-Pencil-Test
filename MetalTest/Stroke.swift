@@ -8,39 +8,6 @@
 import Foundation
 import UIKit
 
-class Color {
-  var r: Float
-  var g: Float
-  var b: Float
-  var a: Float
-  
-  init(_ r: Int, _ g: Int, _ b: Int, _ a: Int) {
-    self.r = Float(r) / 255
-    self.g = Float(g) / 255
-    self.b = Float(b) / 255
-    self.a = Float(a) / 255
-  }
-  
-  init(_ r: Int, _ g: Int, _ b: Int) {
-    self.r = Float(r) / 255
-    self.g = Float(g) / 255
-    self.b = Float(b) / 255
-    self.a = 1.0
-  }
-  
-  func as_simd() -> SIMD4<Float> {
-    return SIMD4<Float>(r,g,b,a)
-  }
-  
-  func as_simd_transparent() -> SIMD4<Float> {
-    return SIMD4<Float>(r,g,b,0)
-  }
-  
-  func as_simd_opaque() -> SIMD4<Float> {
-    return SIMD4<Float>(r,g,b,1)
-  }
-}
-
 class ActiveStroke {
   
   var mode = "Free"
@@ -129,92 +96,92 @@ class ActiveStroke {
 }
 
 
-class StaticGuide {
-  var control_points = [Int: CGVector]()
-  
-  var active = false
-  var curve_points: [(Int, CGVector)] = []
-  var line: [CGVector] = []
-  
-  
-  func start_control_point(pos: CGVector, id: Int) {
-    control_points[id] = pos
-    
-    // Move existing control points
-    if(active == true) {
-      var found = false
-      for i in 0..<curve_points.count {
-        if (curve_points[i].1 - pos).length() < 50 {
-          curve_points[i].0 = id
-          found = true
-        }
-      }
-      
-      if !found {
-        // Add a new control point
-        print("add point", id)
-        curve_points.append((id, pos))
-      }
-    }
-    
-    // Check for close pairs
-    // Iterate over pairs of ids
-    let ids = Array(control_points.keys)
-    for i in 0..<ids.count {
-      let a = control_points[ids[i]]!
-      for j in i+1..<ids.count {
-        let b = control_points[ids[j]]!
-        
-        if (a - b).length() < 100 {
-          //print("trigger", ids[i], ids[j])
-          if(active == false) {
-            active = true
-            curve_points = [
-              (ids[i], a),
-              (ids[j], b),
-            ]
-            return
-          } else {
-            active = false
-          }
-        }
-      }
-    }
-  }
-  
-  func move_control_point(pos: CGVector, id: Int){
-    control_points[id] = pos
-    
-    if(active == true) {
-      // Update curve points if we're active
-      for (id, v) in control_points {
-        for i in 0..<curve_points.count {
-          if id == curve_points[i].0 {
-            curve_points[i].1 = v
-          }
-        }
-      }
-      
-      generate_line()
-    }
-  }
-  
-  func end_control_point(id: Int) {
-    control_points[id] = nil
-  }
-  
-  func generate_line() {
-    if curve_points.count == 2 {
-      let offset = (curve_points[0].1 - curve_points[1].1) * 1000.0
-      line = [curve_points[0].1 + offset, curve_points[0].1 - offset]
-    } else {
-      
-      let offseta = (curve_points[0].1 - curve_points[1].1) * 1000.0
-      let offsetb = (curve_points[curve_points.count-2].1 - curve_points[curve_points.count-1].1) * 1000.0
-      line = [curve_points[0].1 + offseta] + compute_chaikin_points(points: curve_points.map({$0.1})) + [curve_points[curve_points.count-1].1 - offsetb]
-    }
-  }
-}
+//class StaticGuide {
+//  var control_points = [Int: CGVector]()
+//  
+//  var active = false
+//  var curve_points: [(Int, CGVector)] = []
+//  var line: [CGVector] = []
+//  
+//  
+//  func start_control_point(pos: CGVector, id: Int) {
+//    control_points[id] = pos
+//    
+//    // Move existing control points
+//    if(active == true) {
+//      var found = false
+//      for i in 0..<curve_points.count {
+//        if (curve_points[i].1 - pos).length() < 50 {
+//          curve_points[i].0 = id
+//          found = true
+//        }
+//      }
+//      
+//      if !found {
+//        // Add a new control point
+//        print("add point", id)
+//        curve_points.append((id, pos))
+//      }
+//    }
+//    
+//    // Check for close pairs
+//    // Iterate over pairs of ids
+//    let ids = Array(control_points.keys)
+//    for i in 0..<ids.count {
+//      let a = control_points[ids[i]]!
+//      for j in i+1..<ids.count {
+//        let b = control_points[ids[j]]!
+//        
+//        if (a - b).length() < 100 {
+//          //print("trigger", ids[i], ids[j])
+//          if(active == false) {
+//            active = true
+//            curve_points = [
+//              (ids[i], a),
+//              (ids[j], b),
+//            ]
+//            return
+//          } else {
+//            active = false
+//          }
+//        }
+//      }
+//    }
+//  }
+//  
+//  func move_control_point(pos: CGVector, id: Int){
+//    control_points[id] = pos
+//    
+//    if(active == true) {
+//      // Update curve points if we're active
+//      for (id, v) in control_points {
+//        for i in 0..<curve_points.count {
+//          if id == curve_points[i].0 {
+//            curve_points[i].1 = v
+//          }
+//        }
+//      }
+//      
+//      generate_line()
+//    }
+//  }
+//  
+//  func end_control_point(id: Int) {
+//    control_points[id] = nil
+//  }
+//  
+//  func generate_line() {
+//    if curve_points.count == 2 {
+//      let offset = (curve_points[0].1 - curve_points[1].1) * 1000.0
+//      line = [curve_points[0].1 + offset, curve_points[0].1 - offset]
+//    } else {
+//      
+//      let offseta = (curve_points[0].1 - curve_points[1].1) * 1000.0
+//      let offsetb = (curve_points[curve_points.count-2].1 - curve_points[curve_points.count-1].1) * 1000.0
+//      line = [curve_points[0].1 + offseta] + compute_chaikin_points(points: curve_points.map({$0.1})) + [curve_points[curve_points.count-1].1 - offsetb]
+//    }
+//  }
+//}
 
 
 
@@ -277,7 +244,7 @@ class StringStroke {
     
   }
   
-  func get_geometry() -> Geometry {
+  func get_geometry() -> Shape {
     
     if type == "Line" {
       return strokeGeometry(points: [
@@ -329,7 +296,7 @@ class TapeStroke {
     end = point
   }
   
-  func get_geometry() -> Geometry {
+  func get_geometry() -> Shape {
     let diff = (start - end).normalized() //* CGFloat(1.0) // line thickness
     
     let start_left_offset = start + diff.rotated90clockwise()
@@ -349,10 +316,10 @@ class TapeStroke {
       2,3,1
     ]
     
-    return Geometry (verts: verts, indices: indices)
+    return Shape (verts: verts, indices: indices)
   }
   
-  func get_trace_geometry() -> Geometry {
+  func get_trace_geometry() -> Shape {
     var verts: [Vertex] = []
     var indices: [UInt16] = []
     var indexOffset = UInt16(0)
@@ -388,7 +355,7 @@ class TapeStroke {
       lastPoint = newPoint
     }
     
-    return Geometry (verts: verts, indices: indices)
+    return Shape (verts: verts, indices: indices)
   }
 }
 

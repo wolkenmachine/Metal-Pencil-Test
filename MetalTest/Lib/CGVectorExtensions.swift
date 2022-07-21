@@ -198,6 +198,17 @@ public func dot(_ a: CGVector, _ b: CGVector) -> CGFloat {
   return a.dx * b.dx + a.dy * b.dy
 }
 
+public func distance(_ a: CGVector, _ b: CGVector) -> CGFloat {
+  return (a - b).length()
+}
+
+public func scalar_projection(p:CGVector, a:CGVector, b:CGVector) -> CGVector{
+  let ap = p - a
+  let ab = (b - a).normalized()
+  let f = ab * dot(ap, ab)
+  return a + f
+}
+
 //public func cross(_ a: CGVector, _ b: CGVector) -> CGFloat {
 //  
 //}

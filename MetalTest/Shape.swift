@@ -17,7 +17,7 @@ func precomputeCircle() {
   }
 }
 
-func circleGeometryAA(pos: CGPoint, radius: Float, color: [Float]) -> Geometry {
+func circleGeometryAA(pos: CGPoint, radius: Float, color: [Float]) -> Shape {
   var verts: [Vertex] = []
   var indices: [UInt16] = []
   
@@ -55,10 +55,10 @@ func circleGeometryAA(pos: CGPoint, radius: Float, color: [Float]) -> Geometry {
       indices.append(UInt16((i+1)%32 + 1))
   }
   
-  return Geometry (verts: verts, indices: indices)
+  return Shape (verts: verts, indices: indices)
 }
 
-func circleGeometry(pos: CGVector, radius: Float, color: [Float]) -> Geometry {
+func circleGeometry(pos: CGVector, radius: Float, color: [Float]) -> Shape {
   var verts: [Vertex] = []
   var indices: [UInt16] = []
   
@@ -80,11 +80,11 @@ func circleGeometry(pos: CGVector, radius: Float, color: [Float]) -> Geometry {
     indices.append(UInt16((i+1)%32+1))
   }
   
-  return Geometry (verts: verts, indices: indices)
+  return Shape (verts: verts, indices: indices)
 }
 
 
-func strokeGeometry(points: [CGVector], weight: Float, color: [Float]) -> Geometry {
+func strokeGeometry(points: [CGVector], weight: Float, color: [Float]) -> Shape {
   var verts: [Vertex] = []
   var indices: [UInt16] = []
   var points = points
@@ -123,7 +123,7 @@ func strokeGeometry(points: [CGVector], weight: Float, color: [Float]) -> Geomet
     lastPoint = newPoint
   }
   
-  return Geometry (verts: verts, indices: indices)
+  return Shape (verts: verts, indices: indices)
 }
 
 
