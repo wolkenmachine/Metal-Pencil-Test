@@ -45,124 +45,74 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
   // THIS IS WHERE THE MAGIC HAPPEN 👇
   
   // Compute stroke
-  var done_strokes: [TapeStroke] = []
   
-  var tape_stroke: TapeStroke? = nil
-  var string_stroke: StringStroke? = nil
+  var active_stroke = ActiveStroke()
+  var static_guide = StaticGuide()
   
+  var dry_ink: [[CGVector]] = []
+//  var done_strokes: [TapeStroke] = []
+//
+//  var tape_stroke: TapeStroke? = nil
+//
   var fingers = 0;
-  var fingerDown = CGVector(dx:0,dy:0)
-  var fingerDropped = CGVector(dx:0,dy:0)
-  
-  var pencilDown = CGVector(dx:0,dy:0)
-  
-  var fingerDownTimer = 0
-  
-  var mode = "Tape"
-  
+//  var fingerDown = CGVector(dx:0,dy:0)
+//  var fingerDropped = CGVector(dx:0,dy:0)
+//
+//  var pencilDown = CGVector(dx:0,dy:0)
+//
+//  var fingerDownTimer = 0
+//
+//  var mode = "Tape"
+//
   func setup(){
   }
   
   // Pencil event handlers
   func onPencilDown(pos: CGPoint, force: CGFloat){
-    var down = CGVector(point: pos)
-    if mode == "Tape" {
-      if (fingerDown - down).length() < 100 {
-        tape_stroke = TapeStroke(down)
-      }
-    } else if mode == "String" {
-      if (fingerDown - down).length() < 100 {
-        string_stroke = StringStroke(down)
-      }
-    } else if mode == "InvTape" {
-      if (fingerDown - down).length() < 100 {
-        tape_stroke = TapeStroke(down)
-      }
-    }
+    let pos = CGVector(point: pos)
+    active_stroke.start_stroke()
+    active_stroke.move_stroke(pos: pos)
   }
   
   func onPencilMove(pos: CGPoint, force: CGFloat){
-    pencilDown = CGVector(point: pos)
-    
-    if mode == "Tape" {
-      if let tape_stroke = tape_stroke {
-        tape_stroke.move_pencil(CGVector(point: pos))
-        tape_stroke.move_finger(fingerDown)
-      }
-    } else if mode == "String" {
-      if let string_stroke = string_stroke {
-        string_stroke.move_pencil(CGVector(point: pos))
-      }
-    } else if mode == "InvTape" {
-      if let tape_stroke = tape_stroke {
-        tape_stroke.move_finger(CGVector(point: pos))
-        tape_stroke.move_pencil(fingerDown)
-      }
-    }
-
+    let pos = CGVector(point: pos)
+    active_stroke.move_stroke(pos: pos)
   }
   
   func onPencilPredicted(pos: CGPoint, force: CGFloat){
-    onPencilUp(pos: pos, force: force)
+    //onPencilMove(pos: pos, force: force)
   }
   
   func onPencilUp(pos: CGPoint, force: CGFloat){
-    
+    let pos = CGVector(point: pos)
+    active_stroke.move_stroke(pos: pos)
+    let done_stroke = active_stroke.end_stroke()
+    dry_ink.append(done_stroke)
   }
   
   var selected_points: [(Int, Int)] = []
   
-  func onTouchDown(pos: CGPoint){
-    fingers += 1;
-    fingerDown = CGVector(point: pos)
-    fingerDropped = CGVector(point: pos)
-    fingerDownTimer = 0
+  func onTouchDown(pos: CGPoint, id: Int){
+    let pos = CGVector(point: pos)
+    active_stroke.move_control_point(pos: pos, id: id)
     
-    if fingers == 5 {
-      if mode == "Tape" {
-        mode = "String"
-      } else if mode == "String" {
-        mode = "InvTape"
-      } else if mode == "InvTape" {
-        mode = "Tape"
-      }
-    }
-    //tape_stroke = TapeStroke(CGVector(point: pos))
+    static_guide.start_control_point(pos: pos, id: id)
+    static_guide.move_control_point(pos: pos, id: id)
   }
   
-  func onTouchMove(pos: CGPoint){
-    fingerDown = CGVector(point: pos)
-    
-    if mode == "Tape" {
-      if let tape_stroke = tape_stroke {
-        tape_stroke.move_finger(CGVector(point: pos))
-      }
-    } else if mode == "String" {
-      if (fingerDown - fingerDropped).length() > 10 {
-        if let string_stroke = string_stroke {
-          string_stroke.move_finger(CGVector(point: pos))
-        }
-      }
-    } else if mode == "InvTape" {
-      if let tape_stroke = tape_stroke {
-        tape_stroke.move_pencil(CGVector(point: pos))
-      }
-    }
+  func onTouchMove(pos: CGPoint, id: Int){
+    let pos = CGVector(point: pos)
+    active_stroke.move_control_point(pos: pos, id: id)
+    static_guide.move_control_point(pos: pos, id: id)
   }
   
-  func onTouchPredicted(pos: CGPoint){
-    onTouchMove(pos: pos)
+  func onTouchPredicted(pos: CGPoint, id: Int){
+    onTouchMove(pos: pos, id: id)
   }
   
-  func onTouchUp(pos: CGPoint){
-    
-    if let tape_stroke = tape_stroke {
-      done_strokes.append(tape_stroke)
-    }
-    
-    tape_stroke = nil
-    string_stroke = nil
-    fingers -= 1;
+  func onTouchUp(pos: CGPoint, id: Int){
+    active_stroke.end_control_point(id: id)
+    static_guide.end_control_point(id: id)
   }
   
   // Draw Loop
@@ -170,40 +120,44 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
     let dt = Date().timeIntervalSince(previousFrameTime)
     let fps = (1000 / dt * 1000).rounded()
     previousFrameTime = Date()
-    debugInfo.text = "FPS: \(fps)\nFINGERS: \(fingers)\n\(mode)"
+    debugInfo.text = "FPS: \(fps)\nMODE:\(active_stroke.mode)"
     
-    if fingerDownTimer < 200 {
-      fingerDownTimer = fingerDownTimer + Int(dt*1000)
-    }
     
-    // Reset the render buffer
     renderer.clearBuffer()
     
-    if let tape_stroke = tape_stroke {
-      renderer.addGeometry(geometry: tape_stroke.get_geometry())
-      if tape_stroke.trace.count > 1 {
-        renderer.addGeometry(geometry: tape_stroke.get_trace_geometry())
+    
+    
+    for ink in dry_ink {
+      renderer.addGeometry(geometry: strokeGeometry(points: ink, weight: 1.0, color: [0,0,0,1]))
+    }
+    
+    if(active_stroke.current_trace.count > 1) {
+      renderer.addGeometry(geometry: strokeGeometry(points: active_stroke.current_trace, weight: 1.0, color: [0,0,0,1]))
+    }
+    
+    if(active_stroke.mode == "Guide"){
+      // Compute guide line
+      let offset = (active_stroke.last_pencil - active_stroke.last_control_point) * 1000.0
+      
+      renderer.addGeometry(geometry: strokeGeometry(points: [
+        active_stroke.last_pencil + offset,
+        active_stroke.last_pencil - offset,
+      ], weight: 1.0, color: [1.0,0,0.5,1.0]))
+      
+      renderer.addGeometry(geometry: circleGeometry(pos: active_stroke.last_pencil, radius: 3.0, color: [1.0,0,0.5,1.0]))
+      renderer.addGeometry(geometry: circleGeometry(pos: active_stroke.last_control_point, radius: 3.0, color: [1.0,0,0.5,1.0]))
+    }
+    
+    if static_guide.active == true {
+      //let offset = (static_guide.curve_points[0].1 - static_guide.curve_points[1].1) * 1000.0
+      renderer.addGeometry(geometry: strokeGeometry(points: static_guide.line, weight: 1.0, color: [1.0,0,0.5,1.0]))
+      
+      
+      for cp in static_guide.curve_points {
+        renderer.addGeometry(geometry: circleGeometry(pos: cp.1, radius: 3.0, color: [1.0,0,0.5,1.0]))
       }
-    }
-    
-    if (fingers > 0) {
-      if let tape_stroke = tape_stroke {
-        
-        renderer.addGeometry(geometry: strokeGeometry(points: [
-          mode == "Tape" ? fingerDown: pencilDown,
-          tape_stroke.start
-        ], weight: 1.0, color: [0.5,0.1,0.1,0.1]))
-      } else {
-        renderer.addGeometry(geometry: circleGeometry(pos: fingerDown, radius: (Float(fingerDownTimer) / 200) * 100, color: [0.5,0.1,0.1,0.1]))
-      }
-    }
-    
-    if let string_stroke = string_stroke {
-      renderer.addGeometry(geometry: string_stroke.get_geometry())
-    }
-    
-    for s in done_strokes {
-      renderer.addGeometry(geometry: s.get_trace_geometry())
+      
+//      renderer.addGeometry(geometry: circleGeometry(pos: static_guide.curve_points[1].1, radius: 3.0, color: [1.0,0,0.5,1.0]))
     }
     
     
