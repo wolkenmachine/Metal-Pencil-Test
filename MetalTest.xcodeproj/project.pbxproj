@@ -19,6 +19,8 @@
 		1F8BE5C52889A8A40035BF93 /* Geom.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8BE5C42889A8A40035BF93 /* Geom.swift */; };
 		1F8BE5C72889AA850035BF93 /* Shapes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8BE5C62889AA850035BF93 /* Shapes.swift */; };
 		1F8BE5C92889BF390035BF93 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8BE5C82889BF390035BF93 /* Extensions.swift */; };
+		1F8BE5CB288AA3580035BF93 /* BezierFit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8BE5CA288AA3580035BF93 /* BezierFit.swift */; };
+		1F8BE5CD288AB3FC0035BF93 /* Graph.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8BE5CC288AB3FC0035BF93 /* Graph.swift */; };
 		1FA2CB4F2862091900D06E38 /* CGVectorExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA2CB4E2862091800D06E38 /* CGVectorExtensions.swift */; };
 		1FD8E5C5286F3117002EA9DE /* TransformMatrix.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD8E5C4286F3117002EA9DE /* TransformMatrix.swift */; };
 		1FE37ABE2860ACA900DBE6F4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE37ABD2860ACA900DBE6F4 /* AppDelegate.swift */; };
@@ -45,6 +47,8 @@
 		1F8BE5C42889A8A40035BF93 /* Geom.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Geom.swift; sourceTree = "<group>"; };
 		1F8BE5C62889AA850035BF93 /* Shapes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shapes.swift; sourceTree = "<group>"; };
 		1F8BE5C82889BF390035BF93 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		1F8BE5CA288AA3580035BF93 /* BezierFit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BezierFit.swift; sourceTree = "<group>"; };
+		1F8BE5CC288AB3FC0035BF93 /* Graph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Graph.swift; sourceTree = "<group>"; };
 		1FA2CB4E2862091800D06E38 /* CGVectorExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CGVectorExtensions.swift; sourceTree = "<group>"; };
 		1FA2CB5228648F6E00D06E38 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		1FD8E5C4286F3117002EA9DE /* TransformMatrix.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransformMatrix.swift; sourceTree = "<group>"; };
@@ -79,6 +83,7 @@
 				1F8BE5B9288974050035BF93 /* App.swift */,
 				1F8BE5C028898B210035BF93 /* Page.swift */,
 				1F8BE5C228899D4B0035BF93 /* Guide.swift */,
+				1F8BE5CC288AB3FC0035BF93 /* Graph.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -106,6 +111,7 @@
 				1F8BE5C42889A8A40035BF93 /* Geom.swift */,
 				1F8BE5C62889AA850035BF93 /* Shapes.swift */,
 				1F8BE5C82889BF390035BF93 /* Extensions.swift */,
+				1F8BE5CA288AA3580035BF93 /* BezierFit.swift */,
 			);
 			path = Lib;
 			sourceTree = "<group>";
@@ -233,8 +239,10 @@
 				1F8BE5C92889BF390035BF93 /* Extensions.swift in Sources */,
 				1F13FD14286C578500B3699C /* Compute.metal in Sources */,
 				1F45A6672865ECBA00C649D7 /* Shape.swift in Sources */,
+				1F8BE5CD288AB3FC0035BF93 /* Graph.swift in Sources */,
 				1F8BE5C328899D4B0035BF93 /* Guide.swift in Sources */,
 				1FE37AC02860ACA900DBE6F4 /* SceneDelegate.swift in Sources */,
+				1F8BE5CB288AA3580035BF93 /* BezierFit.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

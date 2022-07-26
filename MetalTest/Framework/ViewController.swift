@@ -53,7 +53,7 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
     
     // Calculate frame rate
     let dt = Date().timeIntervalSince(previousFrameTime)
-    let fps = (1000 / dt * 1000).rounded()
+    let fps = (1 / dt).rounded()
     previousFrameTime = Date()
     debugInfo.text = "FPS: \(fps)\n"
     
