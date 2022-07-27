@@ -119,6 +119,32 @@ func pointcloud_center(_ points: [CGVector]) -> CGVector{
   return total / CGFloat(points.count)
 }
 
+func is_point_in_polygon(_ point: CGVector, _ polygon: [CGVector]) -> Bool {
+  // Just like, draw a line to a point very far away, and check intersections with the polygon edges.
+  // If there is an uneven number of interesections, the point is inside
+  var point_inf = point
+  point_inf.dx += 10000000
+  
+  // Close the loop
+  let polygon = polygon + [polygon[0]]
+  
+  var intersections = 0
+  
+  for i in 0...polygon.count - 2 {
+    let a = polygon[i]
+    let b = polygon[i+1]
+    if line_segment_intersection(a, b, point, point_inf) != nil {
+      intersections += 1
+    }
+  }
+  
+  // If the number is uneven return true
+  return intersections % 2 == 1
+  
+}
+
+
+
 // STROKE SIMPLIFICATION
 func resample_stroke_equidistant(_ stroke:[CGVector], lengths: [CGFloat], step: CGFloat = 1.0) -> [CGVector] {
   let total_length = lengths[lengths.count-1]

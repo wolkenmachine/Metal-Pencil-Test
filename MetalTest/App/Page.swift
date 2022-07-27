@@ -8,6 +8,13 @@
 import Foundation
 import UIKit
 
+var MONOTONIC_IDS = 0
+
+func generate_id() -> Int {
+  MONOTONIC_IDS += 1
+  return MONOTONIC_IDS
+}
+
 enum MorphableStroke {
   case Line(MorphableLine)
   case Bezier(MorphableBezier)
@@ -68,15 +75,19 @@ class MorphableBezier {
 }
 
 
-protocol ControlPointProtocol {
+protocol ControlPoint {
+  var pos: CGVector {get set}
+  
   func grab(_ pos: CGVector)
   func move(_ pos: CGVector)
 }
 
-class ControlPoint {
+class EndControlPoint: ControlPoint {
   var line: MorphableLine
   var start: Bool
   var pos: CGVector
+  var connected_to: EndControlPoint?
+  var id: Int = generate_id()
   
   init(line: MorphableLine, start: Bool){
     self.line = line
@@ -89,6 +100,10 @@ class ControlPoint {
     }
   }
   
+  func grab(_ pos: CGVector) {
+    
+  }
+  
   func move(_ pos: CGVector){
     self.pos = pos
     if start {
@@ -99,15 +114,16 @@ class ControlPoint {
   }
 }
 
-class ControlPointCluster {
-  var center = CGVector()
-  var points: [ControlPoint] = []
+class ClusterControlPoint: ControlPoint {
+  var pos: CGVector
+  var points: [EndControlPoint] = []
   
   var down_point = CGVector()
   var down_points: [CGVector] = []
   
-  init(_ points: [ControlPoint]) {
+  init(_ points: [EndControlPoint]) {
     self.points = points
+    self.pos = pointcloud_center(points.map({$0.pos}))
   }
   
   func grab(_ pos: CGVector){
@@ -126,19 +142,81 @@ class ControlPointCluster {
   }
   
   func update_center(){
-    center = pointcloud_center(points.map({$0.pos}))
+    self.pos = pointcloud_center(points.map({$0.pos}))
   }
 }
 
-class IntersectionControlPoint{
+class IntersectionControlPoint: ControlPoint {
+  var pos: CGVector
   var line_a: MorphableLine
   var line_b: MorphableLine
-  var intersection: CGVector
   
   init(_ line_a: MorphableLine, _ line_b: MorphableLine, intersection: CGVector) {
     self.line_a = line_a
     self.line_b = line_b
-    self.intersection = intersection
+    self.pos = intersection
+  }
+
+  func grab(_ pos: CGVector) {
+    //self.pos = pos
+  }
+
+  func move(_ pos: CGVector){
+    
+    // Update line A
+    let closest_on_a = distance(self.pos, line_a.a) < distance(self.pos, line_a.b)
+    let move_on_a = closest_on_a ? line_a.a : line_a.b
+    let stable_on_a = closest_on_a ? line_a.b : line_a.a
+    
+    let scale_on_a = distance(move_on_a, self.pos)
+    let new_on_a = pos + ((pos - stable_on_a).normalized() * scale_on_a)
+    
+    closest_on_a ? line_a.move(new_on_a, line_a.b) : line_a.move(line_a.a, new_on_a);
+    
+    // Update Line B
+    let closest_on_b = distance(self.pos, line_b.a) < distance(self.pos, line_b.b)
+    let move_on_b = closest_on_b ? line_b.a : line_b.b
+    let stable_on_b = closest_on_b ? line_b.b : line_b.a
+    
+    let scale_on_b = distance(move_on_b, self.pos)
+    let new_on_b = pos + ((pos - stable_on_b).normalized() * scale_on_b)
+    
+    closest_on_b ? line_b.move(new_on_b, line_b.b) : line_b.move(line_b.a, new_on_b);
+    
+    self.pos = pos
+  }
+}
+
+class SurfaceControlPoint: ControlPoint {
+  var pos: CGVector
+  var points: [ControlPoint] = []
+  
+  var down_point = CGVector()
+  
+  init(_ points: [ControlPoint]) {
+    self.points = points
+    self.pos = pointcloud_center(points.map({$0.pos}))
+  }
+  
+  func grab(_ pos: CGVector){
+    down_point = pos
+    for p in points {
+      p.grab(pos)
+    }
+  }
+  
+  func move(_ pos: CGVector) {
+    let delta = pos - down_point
+    
+    for p in points {
+      p.move(pos)
+    }
+    
+    //update_center()
+  }
+  
+  func update_center(){
+    self.pos = pointcloud_center(points.map({$0.pos}))
   }
 }
 
@@ -148,11 +226,14 @@ class Page {
   var morphable_strokes: [MorphableStroke] = []
   
   // Dragging mode info
-  var dragging_point_index = -1
+  var dragging_point: ControlPoint? = nil
   
   var control_points: [ControlPoint] = []
-  var cluster_points: [ControlPointCluster] = []
-  var intersection_points: [IntersectionControlPoint] = []
+  var end_control_points: [EndControlPoint] = []
+  var cluster_control_points: [ClusterControlPoint] = []
+  var intersection_control_points: [IntersectionControlPoint] = []
+  
+  var loops: [[Int]] = []
   
   func add_stroke(_ stroke: [CGVector]) {
     morphable_strokes.append(contentsOf: split_stroke_into_morphable_strokes(stroke))
@@ -162,41 +243,89 @@ class Page {
   }
   
   func down_pencil(_ pos: CGVector){
-    dragging_point_index = closest_point_in_collection(points: cluster_points.map({$0.center}), point: pos)
+    // Check if we tapped on a point
+    let dragging_point_index = closest_point_in_collection(points: control_points.map({$0.pos}), point: pos, min_dist: 20.0)
     if dragging_point_index > -1 {
-      cluster_points[dragging_point_index].grab(pos)
+      dragging_point = control_points[dragging_point_index]
+      dragging_point!.grab(pos)
+      return
     }
+    
+    // Check if we tapped on a surface
+    for loop in loops {
+      let loop_pts = loop.map { index in
+        cluster_control_points[index].pos
+      }
+      if is_point_in_polygon(pos, loop_pts) {
+        dragging_point = SurfaceControlPoint(loop.map({ index in
+          cluster_control_points[index]
+        }))
+        dragging_point!.grab(pos)
+        dump(dragging_point)
+      }
+    }
+    
+    
   }
   
   func move_pencil(_ pos: CGVector){
-    if dragging_point_index > -1 {
-      cluster_points[dragging_point_index].move(pos)
+    if let dragging_point = dragging_point {
+      dragging_point.move(pos)
     }
   }
   
   func up_pencil() {
-    dragging_point_index  = -1
+    dragging_point = nil
+    update_abstract_model()
   }
   
   
   func update_abstract_model(){
+    MONOTONIC_IDS = 0;
+    
     // Find all control points
     
-    control_points = []
+    end_control_points = []
     var lines: [MorphableLine] = []
     
     for stroke in morphable_strokes {
       if case let .Line(line) = stroke {
-        control_points.append(ControlPoint(line: line, start: true))
-        control_points.append(ControlPoint(line: line, start: false))
+        let a = EndControlPoint(line: line, start: true)
+        let b = EndControlPoint(line: line, start: false)
+        a.connected_to = b
+        b.connected_to = a
+        end_control_points.append(a)
+        end_control_points.append(b)
         lines.append(line)
       }
     }
     
-    cluster_points = cluster_control_points(control_points)
-    intersection_points = intersect_lines(lines)
+    cluster_control_points = generate_cluster_control_points(end_control_points)
+    intersection_control_points = intersect_lines(lines)
     
     // Cluster control points
+    control_points = (intersection_control_points as [ControlPoint] + cluster_control_points as [ControlPoint])
+   
+    // Construct a graph from clusters and intersections
+    let graph = ConnectivityGraph()
+    
+    // Loop through pairs of cluster_points
+    for i in 0..<cluster_control_points.count {
+      let points_connected_to_i = Set(cluster_control_points[i].points.map({ $0.connected_to!.id }))
+      
+      for j in i+1..<cluster_control_points.count {
+        let points_in_j = Set(cluster_control_points[j].points.map({ $0.id }))
+        
+        if points_connected_to_i.intersection(points_in_j).count > 0 {
+          graph.add_edge(i, j)
+        }
+      }
+    }
+    
+    if graph.nodes_count() > 0 {
+      loops = graph.get_base_cycles_disconnected()
+    }
+    
     
   }
   
@@ -227,13 +356,13 @@ class Page {
   }
   
   func render_control_points(_ renderer: Renderer){
-    for cp in cluster_points {
-      renderer.addShapeData(circleShape(pos: cp.center, radius: 4.0, resolution: 8, color: Color(0,0,255)))
+    for cp in control_points {
+      renderer.addShapeData(circleShape(pos: cp.pos, radius: 4.0, resolution: 8, color: GUIDE_COLOR))
     }
-    
-    for ip in intersection_points {
-      renderer.addShapeData(circleShape(pos: ip.intersection, radius: 4.0, resolution: 8, color: Color(0,255,0)))
-    }
+//
+//    for ip in intersection_points {
+//      renderer.addShapeData(circleShape(pos: ip.intersection, radius: 4.0, resolution: 8, color: Color(0,255,0)))
+//    }
   }
 }
 
@@ -291,13 +420,13 @@ func split_stroke_into_morphable_strokes(_ stroke: [CGVector]) -> [MorphableStro
 }
 
 
-func cluster_control_points(_ points: [ControlPoint]) -> [ControlPointCluster] {
-  var clusters: [ControlPointCluster] = []
+func generate_cluster_control_points(_ points: [EndControlPoint]) -> [ClusterControlPoint] {
+  var clusters: [ClusterControlPoint] = []
   
   // Create a cluster for each individual point
   for i in 0..<points.count {
     let a = points[i]
-    clusters.append(ControlPointCluster([a]))
+    clusters.append(ClusterControlPoint([a]))
   }
   
   for i in 0..<points.count {
