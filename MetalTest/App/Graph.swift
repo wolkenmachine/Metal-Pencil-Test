@@ -69,11 +69,7 @@ class ConnectivityGraph {
     
     var cycles: [[Int]] = []
     
-    print("## GET DISCONNECTED CYCLES")
-    
     while graph.nodes_count() > 0 {
-      print("iterate graph")
-      dump(graph)
       let spanning_tree = graph.get_spanning_tree()
       let new_graph = graph.subtract_graph(spanning_tree)
       let disconnected_subgraph = graph.subtract_graph(new_graph)
@@ -119,9 +115,6 @@ class ConnectivityGraph {
       // Add the shortest loop to the list of cycles, and include the newly added edge to the spanning tree
       // So we can now use this edge to find shorter cycles
       let shortest_loop = loops.first!
-      
-      print("shortest loops")
-      dump(loops)
       
       if shortest_loop.count > 1 {
         cycles.append(shortest_loop)

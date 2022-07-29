@@ -12,10 +12,12 @@ import UIKit
 class DrawingStroke {
   var points: [CGVector] = []
   var predicted_points: [CGVector] = []
+  var color: Color
   
-  init(_ pos: CGVector){
+  init(_ pos: CGVector, _ color: Color){
     points = [pos]
     predicted_points = []
+    self.color = color
   }
   
   func add_point(_ pos: CGVector){
@@ -32,7 +34,7 @@ class DrawingStroke {
     predicted_points = []
     
     return joined_points.map({
-      pt in Vertex(position: SIMD3(Float(pt.dx), Float(pt.dy), 1.0), color: SIMD4(0,0,0,1))
+      pt in Vertex(position: SIMD3(Float(pt.dx), Float(pt.dy), 1.0), color: color.as_simd())
     })
   }
 }

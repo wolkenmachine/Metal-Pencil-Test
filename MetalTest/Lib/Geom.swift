@@ -43,6 +43,22 @@ func closest_point_in_collection(points: [CGVector], point: CGVector, min_dist: 
   return closest_index
 }
 
+func closest_line_in_collection(lines: [(CGVector, CGVector)], point: CGVector, min_dist: CGFloat = 100) -> Int {
+  var closest_distance = min_dist
+  var closest_index = -1
+  for (i, line) in lines.enumerated() {
+    let pt = closest_point_on_line_segment(point, line.0, line.1)
+    let d = distance(pt, point)
+    
+    if d < closest_distance {
+      closest_distance = d
+      closest_index = i
+    }
+  }
+  
+  return closest_index
+}
+
 func closest_point_on_curve(line: [CGVector], point: CGVector, min_dist: CGFloat = 100) -> CGVector? {
   var closest_distance = min_dist
   var closest_point: CGVector? = nil
@@ -119,6 +135,26 @@ func pointcloud_center(_ points: [CGVector]) -> CGVector{
   return total / CGFloat(points.count)
 }
 
+func is_point_in_triangle(p: CGVector, a: CGVector, b: CGVector, c: CGVector) -> Bool {
+  let ab = b - a
+  let bc = c - b
+  let ca = a - c
+  
+  let ap = p - a
+  let bp = p - b
+  let cp = p - c
+  
+  let cross1 = cross(ab, ap)
+  let cross2 = cross(bc, bp)
+  let cross3 = cross(ca, cp)
+  
+  if cross1 > 0 || cross2 > 0 || cross3 > 0 {
+    return false
+  }
+  
+  return true
+}
+
 func is_point_in_polygon(_ point: CGVector, _ polygon: [CGVector]) -> Bool {
   // Just like, draw a line to a point very far away, and check intersections with the polygon edges.
   // If there is an uneven number of interesections, the point is inside
@@ -171,6 +207,12 @@ func stroke_lengths(_ stroke:[CGVector]) -> [CGFloat] {
     lengths.append(length_accumulator)
   }
   return lengths
+}
+
+func stroke_lengths_paramterized(_ stroke: [CGVector]) -> [CGFloat] {
+  let lengths = stroke_lengths(stroke)
+  let total_length = lengths.last!
+  return lengths.map { l in l / total_length }
 }
 
 func point_on_stroke_at_length(_ stroke: [CGVector], lengths: [CGFloat], length: CGFloat) -> CGVector {
@@ -247,3 +289,120 @@ func chaikin_curve(points: [CGVector], depth: Int = 3) -> [CGVector] {
     return compute_chaikin_points(points: chaikin_points, depth: depth-1)
   }
 }
+
+
+// Triangulation
+// Returns a list of indices
+func triangulate_polygon(_ points: [CGVector]) -> [Int] {
+  var points = points
+  if points.count < 3 {
+    return []
+  }
+  
+  // Should be sure that lines don't overlap (No figure 8 for example)
+  // Edges shouldn't be colinear (We can remove those up front)
+  // Winding order should be clockwise
+  
+  // TODO: Double check
+  if !is_polygon_winding_order_cw(points) {
+    print("clockwise")
+    points = points.reversed()
+  }
+  print("counter clockwise")
+  
+  
+  var indices: [Int] = Array(0..<points.count)
+  var triangles: [Int] = []
+  
+  print("indices", indices)
+  
+  while indices.count > 3 {
+    for i in 0..<indices.count {
+      let a = indices[i]
+      let b = get_point_in_loop(indices, i-1)
+      let c = get_point_in_loop(indices, i+1)
+      
+      print("trying", a,b,c)
+      
+      let va = points[a]
+      let vb = points[b]
+      let vc = points[c]
+      
+      let vab = vb - va
+      let vac = vc - va
+      
+      // Check if ear is Convex or Reflex, if reflex skip
+      let convexity = cross(vac, vab)
+      print("checking convexity", convexity)
+      if convexity < 0 {
+        continue;
+      }
+      
+      print("convex")
+      
+      // Check if anything lies inside of this triangle
+      var isEar = true;
+      
+      print("checking is ear")
+      for j in 0..<indices.count {
+        if j == a || j == b || j == c {
+          continue
+        }
+        
+        let p = points[j]
+        if is_point_in_triangle(p: p, a: vb, b: va, c: vc) {
+          isEar = false
+          break
+        }
+      }
+      
+      // If it is an ear, add it to the triangle list
+      if isEar {
+        print("isEar")
+        triangles.append(b)
+        triangles.append(a)
+        triangles.append(c)
+        indices.remove(at: i)
+        break
+      }
+    }
+  }
+  
+  triangles.append(indices[0])
+  triangles.append(indices[1])
+  triangles.append(indices[2])
+  
+  
+  return triangles
+}
+
+func get_point_in_loop(_ points: [Int], _ index: Int) -> Int {
+  if index >= points.count {
+    return points[index % points.count]
+  } else if index < 0 {
+    return points[index % points.count + points.count]
+  } else {
+    return points[index]
+  }
+}
+
+
+// Use signed area under polygon line segments to determine if polygon winding order is cw or ccw
+func is_polygon_winding_order_cw(_ points: [CGVector]) -> Bool {
+  var total_area: CGFloat = 0
+  
+  for i in 0..<points.count-1 {
+    let a = points[i]
+    let b = points[i+1]
+    
+    let avg_y = (a.dx + b.dy) / 2
+    let dx = b.dx - a.dx
+    
+    let area = dx * avg_y
+    
+    total_area += area
+  }
+  
+  return total_area > 0
+}
+

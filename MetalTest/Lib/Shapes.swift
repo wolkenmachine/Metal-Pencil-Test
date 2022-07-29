@@ -120,3 +120,18 @@ func circleShape(pos: CGVector, radius: Float, resolution: Int, color: Color) ->
   
   return Shape (verts: verts, indices: indices)
 }
+
+func polyFillShape(points: [CGVector], color: Color) -> Shape {
+  let color = color.as_simd()
+  
+  var verts: [Vertex] = []
+  for p in points {
+    verts.append(Vertex(position: SIMD3<Float>(Float(p.dx), Float(p.dy), 0), color: color))
+  }
+  
+  let indices = triangulate_polygon(points).map({ i in
+    UInt16(i)
+  })
+  
+  return Shape (verts: verts, indices: indices)
+}

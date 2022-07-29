@@ -142,7 +142,7 @@ class StaticGuide: Guide {
   func should_destruct(fingers: [TouchId: CGVector], pencil: CGVector?) -> Bool {
     // TODO
     
-    if fingers.count == 5 {
+    if fingers.count == 4 {
       return true
     }
     return false

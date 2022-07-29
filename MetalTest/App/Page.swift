@@ -24,11 +24,13 @@ class MorphableLine {
   var a: CGVector
   var b: CGVector
   var points: [CGVector]
+  var color: Color
   
-  init(a: CGVector, b: CGVector, points: [CGVector]){
+  init(a: CGVector, b: CGVector, points: [CGVector], color: Color){
     self.a = a
     self.b = b
     self.points = points
+    self.color = color
   }
   
   func move(_ new_a: CGVector, _ new_b: CGVector){
@@ -64,13 +66,15 @@ class MorphableBezier {
   var c: CGVector
   var d: CGVector
   var points: [CGVector]
+  var color: Color
   
-  init(a: CGVector, b: CGVector, c: CGVector, d: CGVector, points: [CGVector]){
+  init(a: CGVector, b: CGVector, c: CGVector, d: CGVector, points: [CGVector], color: Color){
     self.a = a
     self.b = b
     self.c = c
     self.d = d
     self.points = points
+    self.color = color
   }
 }
 
@@ -220,6 +224,16 @@ class SurfaceControlPoint: ControlPoint {
   }
 }
 
+class Fill {
+  let loop: Int
+  let color: Color
+  
+  init(_ loop: Int, _ color: Color) {
+    self.loop = loop
+    self.color = color
+  }
+}
+
 
 // Page
 class Page {
@@ -235,18 +249,39 @@ class Page {
   
   var loops: [[Int]] = []
   
-  func add_stroke(_ stroke: [CGVector]) {
-    morphable_strokes.append(contentsOf: split_stroke_into_morphable_strokes(stroke))
+  var fills: [Fill] = []
+  
+  func add_stroke(_ stroke: [CGVector], color: Color) {
+    morphable_strokes.append(contentsOf: split_stroke_into_morphable_strokes(stroke, color: color))
     
     update_abstract_model()
-    
+  }
+  
+  func add_fill(_ pos: CGVector, _ color: Color) {
+    for (il, loop) in loops.enumerated() {
+      let loop_pts = loop.map { index in
+        cluster_control_points[index].pos
+      }
+      if is_point_in_polygon(pos, loop_pts) {
+        fills.append(Fill(il, color))
+      }
+    }
   }
   
   func down_pencil(_ pos: CGVector){
     // Check if we tapped on a point
-    let dragging_point_index = closest_point_in_collection(points: control_points.map({$0.pos}), point: pos, min_dist: 20.0)
+    
+    var dragging_point_index = closest_point_in_collection(points: control_points.map({$0.pos}), point: pos, min_dist: 15.0)
     if dragging_point_index > -1 {
       dragging_point = control_points[dragging_point_index]
+      dragging_point!.grab(pos)
+      return
+    }
+    
+    // Check if we tapped a line so we can pull it appart
+    dragging_point_index = closest_point_in_collection(points: end_control_points.map({$0.pos}), point: pos, min_dist: 30.0)
+    if dragging_point_index > -1 {
+      dragging_point = end_control_points[dragging_point_index]
       dragging_point!.grab(pos)
       return
     }
@@ -261,7 +296,6 @@ class Page {
           cluster_control_points[index]
         }))
         dragging_point!.grab(pos)
-        dump(dragging_point)
       }
     }
     
@@ -325,29 +359,44 @@ class Page {
     if graph.nodes_count() > 0 {
       loops = graph.get_base_cycles_disconnected()
     }
-    
-    
+  }
+  
+  func undo(){
+    if morphable_strokes.count > 0 {
+      morphable_strokes.remove(at: morphable_strokes.count - 1)
+      update_abstract_model()
+    }
   }
   
   func render(_ renderer: Renderer) {
     var data: [Vertex] = []
     
+    for fill in fills {
+      let pts = loops[fill.loop].map { i in
+        cluster_control_points[i].pos
+      }
+      renderer.addShapeData(polyFillShape(points: pts, color: fill.color))
+    }
+    
     for stroke in morphable_strokes {
       var points: [CGVector] = []
+      var color: Color = Color(0, 0, 0)
       switch stroke {
         case let .Line(line):
           points = line.points
+          color = line.color
         case let .Bezier(curve):
           points = curve.points
+          color = curve.color
       }
       
       let first = points.first!
-      data.append(Vertex(position: SIMD3(Float(first.dx), Float(first.dy), 1.0), color: SIMD4(0,0,0,0)))
+      data.append(Vertex(position: SIMD3(Float(first.dx), Float(first.dy), 1.0), color: color.as_simd_transparent()))
       for pt in points {
-        data.append(Vertex(position: SIMD3(Float(pt.dx), Float(pt.dy), 1.0), color: SIMD4(0,0,0,1)))
+        data.append(Vertex(position: SIMD3(Float(pt.dx), Float(pt.dy), 1.0), color: color.as_simd()))
       }
       let last = points.last!
-      data.append(Vertex(position: SIMD3(Float(last.dx), Float(last.dy), 1.0), color: SIMD4(0,0,0,0)))
+      data.append(Vertex(position: SIMD3(Float(last.dx), Float(last.dy), 1.0), color: color.as_simd_transparent()))
       
     }
     
@@ -366,7 +415,7 @@ class Page {
   }
 }
 
-func split_stroke_into_morphable_strokes(_ stroke: [CGVector]) -> [MorphableStroke] {
+func split_stroke_into_morphable_strokes(_ stroke: [CGVector], color: Color) -> [MorphableStroke] {
   
   let resampled_stroke = resample_stroke_equidistant(stroke, lengths: stroke_lengths(stroke))
   let simplified_stroke = rdp_simplify_stroke(resampled_stroke)
@@ -396,11 +445,11 @@ func split_stroke_into_morphable_strokes(_ stroke: [CGVector]) -> [MorphableStro
     if (deviation < 2.0) {
       // Append the previously accumulated segments as a curve
       if curve_accumulator.count > 0 {
-        morphable_strokes.append(MorphableStroke.Bezier(MorphableBezier(a: curve_accumulator.first!, b: CGVector(), c: CGVector(), d: curve_accumulator.last!, points: curve_accumulator)))
+        morphable_strokes.append(MorphableStroke.Bezier(MorphableBezier(a: curve_accumulator.first!, b: CGVector(), c: CGVector(), d: curve_accumulator.last!, points: curve_accumulator, color: color)))
         curve_accumulator = []
       }
       // Append the current segment as a line
-      morphable_strokes.append(MorphableStroke.Line(MorphableLine(a: segment.first!, b: segment.last!, points: segment)))
+      morphable_strokes.append(MorphableStroke.Line(MorphableLine(a: segment.first!, b: segment.last!, points: segment, color: color)))
     } else {
       // Accumulate curve segments
       if(curve_accumulator.count == 0) {
@@ -413,7 +462,7 @@ func split_stroke_into_morphable_strokes(_ stroke: [CGVector]) -> [MorphableStro
   }
   // If there are still accumulated segments left, append those
   if curve_accumulator.count > 0 {
-    morphable_strokes.append(MorphableStroke.Bezier(MorphableBezier(a: curve_accumulator.first!, b: CGVector(), c: CGVector(), d: curve_accumulator.last!, points: curve_accumulator)))
+    morphable_strokes.append(MorphableStroke.Bezier(MorphableBezier(a: curve_accumulator.first!, b: CGVector(), c: CGVector(), d: curve_accumulator.last!, points: curve_accumulator, color: color)))
   }
   
   return morphable_strokes

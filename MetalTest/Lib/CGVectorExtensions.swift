@@ -209,6 +209,9 @@ public func scalar_projection(p:CGVector, a:CGVector, b:CGVector) -> CGVector{
   return a + f
 }
 
-//public func cross(_ a: CGVector, _ b: CGVector) -> CGFloat {
-//  
-//}
+// This is not a "real" cross product, but it's very useful for calculating orientation
+// In a 3d cross product, If the input z's are 0, the output x & y components will both be zero
+// This returns the z component in a 3d vector cross product
+public func cross(_ a: CGVector, _ b: CGVector) -> CGFloat {
+  return a.dx*b.dy - a.dy*b.dx
+}

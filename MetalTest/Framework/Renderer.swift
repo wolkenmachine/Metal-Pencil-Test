@@ -223,15 +223,17 @@ extension Renderer: MTKViewDelegate {
     commandEncoder.setVertexBytes(&constants, length: MemoryLayout<Constants>.stride, index: 1)
     
     // Draw calls
-    if pointBufferSize>2 {
-      commandEncoder.setVertexBuffer(pointVertexBuffer, offset: 0, index: 0)
-      commandEncoder.drawPrimitives(type: MTLPrimitiveType.triangleStrip, vertexStart: 0, vertexCount: pointBufferSize*2-2)
-
-    }
     
+    // Draw shapes
     if indexBufferSize > 0 {
       commandEncoder.setVertexBuffer(vertexBuffer, offset: 0, index: 0)
       commandEncoder.drawIndexedPrimitives(type: .triangle, indexCount: indexBufferSize, indexType: .uint16, indexBuffer: indexBuffer, indexBufferOffset: 0)
+    }
+    
+    // Draw lines
+    if pointBufferSize>2 {
+      commandEncoder.setVertexBuffer(pointVertexBuffer, offset: 0, index: 0)
+      commandEncoder.drawPrimitives(type: MTLPrimitiveType.triangleStrip, vertexStart: 0, vertexCount: pointBufferSize*2-2)
     }
     
     

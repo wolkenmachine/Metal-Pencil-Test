@@ -40,6 +40,8 @@ class App {
   
   var pseudo_mode = PseudoMode()
   
+  var color_picker = ColorPicker()
+  
   func setup(){
     
   }
@@ -65,12 +67,40 @@ class App {
         
         if touch.event_type == .Begin {
           pseudo_mode.down_finger(touch.id, touch.pos)
+          
+          if active_fingers.count == 5 {
+            page.undo()
+          }
         }
       }
       
       // Pencil interactions
       else if touch.type == .Pencil {
         var pos = touch.pos
+          
+        // UI Interactions
+        var did_ui_interaction = false;
+        switch touch.event_type {
+          case .Begin:
+            did_ui_interaction = color_picker.down_pencil(touch.pos)
+          case .End:
+            if color_picker.up_pencil(touch.pos) {
+              did_ui_interaction = true
+              page.add_fill(touch.pos, color_picker.current_color)
+            }
+          case .Move:
+            color_picker.move_pencil(touch.pos)
+          case .Predict:
+            color_picker.move_pencil(touch.pos)
+          default:
+            break
+        }
+        
+        if did_ui_interaction {
+          break
+        }
+        
+        // Canvas interactions
         if let active_guide = active_guide {
           pos = active_guide.get_closest_point(pos)
         }
@@ -79,20 +109,25 @@ class App {
         if pseudo_mode.mode == "Draw" {
           switch touch.event_type {
             case .Begin:
-              drawing_stroke = DrawingStroke(pos)
-              
+            drawing_stroke = DrawingStroke(pos, color_picker.current_color)
             case .Move:
-              drawing_stroke!.add_point(pos)
-              if let active_guide = active_guide {
-                active_guide.move_pencil(pos)
+              if let drawing_stroke = drawing_stroke {
+                drawing_stroke.add_point(pos)
+                if let active_guide = active_guide {
+                  active_guide.move_pencil(pos)
+                }
               }
             case .Predict:
-              drawing_stroke!.add_predicted_point(pos)
-              if let active_guide = active_guide {
-                active_guide.move_pencil(pos)
+              if let drawing_stroke = drawing_stroke {
+                drawing_stroke.add_predicted_point(pos)
+                if let active_guide = active_guide {
+                  active_guide.move_pencil(pos)
+                }
               }
             case .End:
-              page.add_stroke(drawing_stroke!.points)
+              if let drawing_stroke = drawing_stroke {
+                page.add_stroke(drawing_stroke.points, color: drawing_stroke.color)
+              }
               drawing_stroke = nil
           }
         }
@@ -147,5 +182,7 @@ class App {
     if let active_guide = active_guide {
       active_guide.render(renderer)
     }
+    
+    color_picker.render(renderer)
   }
 }
