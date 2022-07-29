@@ -9,6 +9,7 @@ import Foundation
 import UIKit
 
 var MONOTONIC_IDS = 0
+var LINE_SEGMENT_IDS = 0
 
 func generate_id() -> Int {
   MONOTONIC_IDS += 1
@@ -25,12 +26,15 @@ class MorphableLine {
   var b: CGVector
   var points: [CGVector]
   var color: Color
+  var id: Int
   
   init(a: CGVector, b: CGVector, points: [CGVector], color: Color){
     self.a = a
     self.b = b
     self.points = points
     self.color = color
+    self.id = LINE_SEGMENT_IDS
+    LINE_SEGMENT_IDS += 1
   }
   
   func move(_ new_a: CGVector, _ new_b: CGVector){
@@ -91,7 +95,7 @@ class EndControlPoint: ControlPoint {
   var start: Bool
   var pos: CGVector
   var connected_to: EndControlPoint?
-  var id: Int = generate_id()
+  var id: String
   
   init(line: MorphableLine, start: Bool){
     self.line = line
@@ -99,8 +103,10 @@ class EndControlPoint: ControlPoint {
     
     if start {
       self.pos = line.a
+      self.id = "\(line.id)_s"
     } else {
       self.pos = line.b
+      self.id = "\(line.id)_e"
     }
   }
   
@@ -124,10 +130,14 @@ class ClusterControlPoint: ControlPoint {
   
   var down_point = CGVector()
   var down_points: [CGVector] = []
+  var id: String
   
   init(_ points: [EndControlPoint]) {
     self.points = points
     self.pos = pointcloud_center(points.map({$0.pos}))
+    self.id = self.points.map({ pt in
+      pt.id
+    }).joined()
   }
   
   func grab(_ pos: CGVector){
@@ -225,10 +235,10 @@ class SurfaceControlPoint: ControlPoint {
 }
 
 class Fill {
-  let loop: Int
+  let loop: [String]
   let color: Color
   
-  init(_ loop: Int, _ color: Color) {
+  init(_ loop: [String], _ color: Color) {
     self.loop = loop
     self.color = color
   }
@@ -247,7 +257,7 @@ class Page {
   var cluster_control_points: [ClusterControlPoint] = []
   var intersection_control_points: [IntersectionControlPoint] = []
   
-  var loops: [[Int]] = []
+  var cluster_loop_ids: [[String]] = []
   
   var fills: [Fill] = []
   
@@ -258,13 +268,10 @@ class Page {
   }
   
   func add_fill(_ pos: CGVector, _ color: Color) {
-    for (il, loop) in loops.enumerated() {
-      let loop_pts = loop.map { index in
-        cluster_control_points[index].pos
-      }
-      if is_point_in_polygon(pos, loop_pts) {
-        fills.append(Fill(il, color))
-      }
+    let closest_surface = find_closest_surface(pos)
+    if let closest_surface = closest_surface {
+      let ids = closest_surface.map { cp in cp.id }
+      fills.append(Fill(ids, color))
     }
   }
   
@@ -286,17 +293,11 @@ class Page {
       return
     }
     
-    // Check if we tapped on a surface
-    for loop in loops {
-      let loop_pts = loop.map { index in
-        cluster_control_points[index].pos
-      }
-      if is_point_in_polygon(pos, loop_pts) {
-        dragging_point = SurfaceControlPoint(loop.map({ index in
-          cluster_control_points[index]
-        }))
-        dragging_point!.grab(pos)
-      }
+    // Check if we tapped a surface
+    let closest_surface = find_closest_surface(pos)
+    if let closest_surface = closest_surface {
+      dragging_point = SurfaceControlPoint(closest_surface)
+      dragging_point!.grab(pos)
     }
     
     
@@ -311,6 +312,38 @@ class Page {
   func up_pencil() {
     dragging_point = nil
     update_abstract_model()
+  }
+  
+  func find_closest_surface(_ pos: CGVector) -> [ClusterControlPoint]? {
+    // Check if we tapped on a surface and find the smallest surface area
+    var closest_surface_index: Int? = nil
+    var surface_area: CGFloat = 1000000000
+    
+    // Find clusterpoints for each loop
+    let cluster_point_loops = cluster_loop_ids.map { cluster_loop in
+      cluster_loop.map { id in
+        cluster_control_points.first(where: { cp in
+          cp.id == id
+        })!
+      }
+    }
+    
+    // Find the smallest loop that i've tapped
+    for (loop_index, loop) in cluster_point_loops.enumerated() {
+      let loop_pts = loop.map { cp in cp.pos }
+      if is_point_in_polygon(pos, loop_pts) {
+        let area = polygon_area(loop_pts + [loop_pts[0]])
+        if area < surface_area {
+          closest_surface_index = loop_index
+          surface_area = area
+        }
+      }
+    }
+    
+    if closest_surface_index == nil {
+      return nil
+    }
+    return cluster_point_loops[closest_surface_index!]
   }
   
   
@@ -357,7 +390,12 @@ class Page {
     }
     
     if graph.nodes_count() > 0 {
-      loops = graph.get_base_cycles_disconnected()
+      let loops = graph.get_base_cycles_disconnected()
+      cluster_loop_ids = loops.map { loop in
+        loop.map { index in
+          cluster_control_points[index].id
+        }
+      }
     }
   }
   
@@ -372,9 +410,9 @@ class Page {
     var data: [Vertex] = []
     
     for fill in fills {
-      let pts = loops[fill.loop].map { i in
-        cluster_control_points[i].pos
-      }
+      let pts = fill.loop.map({id in
+        cluster_control_points.first(where: {cp in cp.id == id})!.pos
+      })
       renderer.addShapeData(polyFillShape(points: pts, color: fill.color))
     }
     

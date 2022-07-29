@@ -294,27 +294,32 @@ func chaikin_curve(points: [CGVector], depth: Int = 3) -> [CGVector] {
 // Triangulation
 // Returns a list of indices
 func triangulate_polygon(_ points: [CGVector]) -> [Int] {
+  print(" ")
+  print("triangulating")
+  dump(points)
+  
   var points = points
   if points.count < 3 {
     return []
   }
   
+  // TODO: Double check
   // Should be sure that lines don't overlap (No figure 8 for example)
   // Edges shouldn't be colinear (We can remove those up front)
-  // Winding order should be clockwise
   
-  // TODO: Double check
-  if !is_polygon_winding_order_cw(points) {
-    print("clockwise")
+  
+  // Winding order should be clockwise
+  if !is_polygon_winding_order_cw(points + [points[0]]) {
+    //print("counter clockwise")
     points = points.reversed()
   }
-  print("counter clockwise")
+  //print("clockwise")
   
   
   var indices: [Int] = Array(0..<points.count)
   var triangles: [Int] = []
   
-  print("indices", indices)
+  //print("indices", indices)
   
   while indices.count > 3 {
     for i in 0..<indices.count {
@@ -322,7 +327,7 @@ func triangulate_polygon(_ points: [CGVector]) -> [Int] {
       let b = get_point_in_loop(indices, i-1)
       let c = get_point_in_loop(indices, i+1)
       
-      print("trying", a,b,c)
+      //print("trying", a,b,c)
       
       let va = points[a]
       let vb = points[b]
@@ -333,17 +338,17 @@ func triangulate_polygon(_ points: [CGVector]) -> [Int] {
       
       // Check if ear is Convex or Reflex, if reflex skip
       let convexity = cross(vac, vab)
-      print("checking convexity", convexity)
+      //print("checking convexity", convexity)
       if convexity < 0 {
         continue;
       }
       
-      print("convex")
+      //print("convex")
       
       // Check if anything lies inside of this triangle
       var isEar = true;
       
-      print("checking is ear")
+      //print("checking is ear")
       for j in 0..<indices.count {
         if j == a || j == b || j == c {
           continue
@@ -358,7 +363,7 @@ func triangulate_polygon(_ points: [CGVector]) -> [Int] {
       
       // If it is an ear, add it to the triangle list
       if isEar {
-        print("isEar")
+        //print("isEar")
         triangles.append(b)
         triangles.append(a)
         triangles.append(c)
@@ -395,7 +400,7 @@ func is_polygon_winding_order_cw(_ points: [CGVector]) -> Bool {
     let a = points[i]
     let b = points[i+1]
     
-    let avg_y = (a.dx + b.dy) / 2
+    let avg_y = (a.dy + b.dy) / 2
     let dx = b.dx - a.dx
     
     let area = dx * avg_y
@@ -403,6 +408,24 @@ func is_polygon_winding_order_cw(_ points: [CGVector]) -> Bool {
     total_area += area
   }
   
-  return total_area > 0
+  return total_area < 0
 }
 
+
+func polygon_area(_ points: [CGVector]) -> CGFloat {
+  var total_area: CGFloat = 0
+  
+  for i in 0..<points.count-1 {
+    let a = points[i]
+    let b = points[i+1]
+    
+    let avg_y = (a.dy + b.dy) / 2
+    let dx = b.dx - a.dx
+    
+    let area = dx * avg_y
+    
+    total_area += area
+  }
+  
+  return abs(total_area)
+}

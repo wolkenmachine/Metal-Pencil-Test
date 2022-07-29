@@ -43,6 +43,35 @@ class App {
   var color_picker = ColorPicker()
   
   func setup(){
+//    triangulate_polygon([
+//      CGVector(dx: 10, dy: 10),
+//      CGVector(dx: 50, dy: 10),
+//      CGVector(dx: 50, dy: 50),
+//      CGVector(dx: 10, dy: 50),
+//    ])
+//    
+//    triangulate_polygon([
+//      CGVector(dx: 10, dy: 50),
+//      CGVector(dx: 50, dy: 50),
+//      CGVector(dx: 50, dy: 10),
+//      CGVector(dx: 10, dy: 10),
+//    ])
+//    
+//    triangulate_polygon([
+//      CGVector(dx: 50, dy: 50),
+//      CGVector(dx: 150, dy: 50),
+//      CGVector(dx: 50, dy: 200),
+//      CGVector(dx: 20, dy: 30),
+//    ])
+//    
+//    
+//    triangulate_polygon([
+//      CGVector(dx: 772, dy: 316),
+//      CGVector(dx: 833, dy: 188),
+//      CGVector(dx: 713, dy: 113),
+//      CGVector(dx: 606, dy: 237),
+//    ])
+    
     
   }
   

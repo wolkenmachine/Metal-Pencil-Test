@@ -81,7 +81,7 @@ class ColorPicker {
     
   }
   
-  func up_pencil(_ pos: CGVector) -> Bool {
+  func up_pencil(_ pos: CGVector) -> Bool {    
     if did_pick {
       did_pick = false
       active = false
