@@ -98,6 +98,10 @@ public extension CGVector {
     let s = sin(angle)
     return CGVector(dx: self.dx*c - self.dy*s, dy: self.dx*s + self.dy*c)
   }
+  
+  func sum() -> CGFloat {
+    return self.dx + self.dy
+  }
 
 }
 

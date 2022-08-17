@@ -24,6 +24,7 @@
 		1F8BE5CD288AB3FC0035BF93 /* Graph.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8BE5CC288AB3FC0035BF93 /* Graph.swift */; };
 		1F8BE5CF289189920035BF93 /* ColorPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8BE5CE289189920035BF93 /* ColorPicker.swift */; };
 		1FA2CB4F2862091900D06E38 /* CGVectorExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA2CB4E2862091800D06E38 /* CGVectorExtensions.swift */; };
+		1FC632A92894180B00DF15ED /* FitCurve.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC632A82894180B00DF15ED /* FitCurve.swift */; };
 		1FD8E5C5286F3117002EA9DE /* TransformMatrix.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD8E5C4286F3117002EA9DE /* TransformMatrix.swift */; };
 		1FE37ABE2860ACA900DBE6F4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE37ABD2860ACA900DBE6F4 /* AppDelegate.swift */; };
 		1FE37AC02860ACA900DBE6F4 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE37ABF2860ACA900DBE6F4 /* SceneDelegate.swift */; };
@@ -55,6 +56,7 @@
 		1F8BE5CE289189920035BF93 /* ColorPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorPicker.swift; sourceTree = "<group>"; };
 		1FA2CB4E2862091800D06E38 /* CGVectorExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CGVectorExtensions.swift; sourceTree = "<group>"; };
 		1FA2CB5228648F6E00D06E38 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		1FC632A82894180B00DF15ED /* FitCurve.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FitCurve.swift; sourceTree = "<group>"; };
 		1FD8E5C4286F3117002EA9DE /* TransformMatrix.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransformMatrix.swift; sourceTree = "<group>"; };
 		1FE37ABA2860ACA900DBE6F4 /* MetalTest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MetalTest.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1FE37ABD2860ACA900DBE6F4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -118,6 +120,7 @@
 				1F8BE5C82889BF390035BF93 /* Extensions.swift */,
 				1F8BE5CA288AA3580035BF93 /* BezierFit.swift */,
 				1F0C43232892DDEF0020E56A /* PathFitter.swift */,
+				1FC632A82894180B00DF15ED /* FitCurve.swift */,
 			);
 			path = Lib;
 			sourceTree = "<group>";
@@ -246,6 +249,7 @@
 				1F8BE5C92889BF390035BF93 /* Extensions.swift in Sources */,
 				1F13FD14286C578500B3699C /* Compute.metal in Sources */,
 				1F45A6672865ECBA00C649D7 /* Shape.swift in Sources */,
+				1FC632A92894180B00DF15ED /* FitCurve.swift in Sources */,
 				1F8BE5CD288AB3FC0035BF93 /* Graph.swift in Sources */,
 				1F8BE5C328899D4B0035BF93 /* Guide.swift in Sources */,
 				1FE37AC02860ACA900DBE6F4 /* SceneDelegate.swift in Sources */,

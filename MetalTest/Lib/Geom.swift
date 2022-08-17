@@ -310,16 +310,16 @@ func triangulate_polygon(_ points: [CGVector]) -> [Int] {
   
   // Winding order should be clockwise
   if !is_polygon_winding_order_cw(points + [points[0]]) {
-    //print("counter clockwise")
+    print("counter clockwise")
     points = points.reversed()
   }
-  //print("clockwise")
+  print("clockwise")
   
   
   var indices: [Int] = Array(0..<points.count)
   var triangles: [Int] = []
   
-  //print("indices", indices)
+  print("indices", indices)
   
   while indices.count > 3 {
     for i in 0..<indices.count {
@@ -327,7 +327,7 @@ func triangulate_polygon(_ points: [CGVector]) -> [Int] {
       let b = get_point_in_loop(indices, i-1)
       let c = get_point_in_loop(indices, i+1)
       
-      //print("trying", a,b,c)
+      print("trying", a,b,c)
       
       let va = points[a]
       let vb = points[b]
@@ -337,19 +337,19 @@ func triangulate_polygon(_ points: [CGVector]) -> [Int] {
       let vac = vc - va
       
       // Check if ear is Convex or Reflex, if reflex skip
-      let convexity = cross(vac, vab)
-      //print("checking convexity", convexity)
-      if convexity < 0 {
+      let convexity = cross(vab, vac)
+      print("checking convexity", convexity)
+      if convexity > 0 {
         continue;
       }
       
-      //print("convex")
+      print("convex")
       
       // Check if anything lies inside of this triangle
       var isEar = true;
       
       //print("checking is ear")
-      for j in 0..<indices.count {
+      for j in 0..<points.count {
         if j == a || j == b || j == c {
           continue
         }

@@ -26,7 +26,7 @@
 //}
 //
 //
-//func fit_cubic(_ points: [CGVector], error: CGFloat, first: Int, last: Int, tan1: CGVector, tan2: CGVector) {
+//func fit_cubic(_ points: [CGVector], _ error: CGFloat, _ first: Int, _ last: Int, _ tan1: CGVector, _ tan2: CGVector) {
 //  
 //  // Use heuristic if region only has two points in it
 //  // TODO
@@ -34,7 +34,7 @@
 //  // Parameterize points, and attempt to fit curve
 //  let uPrime = stroke_lengths_paramterized(points)
 //  var maxError = max(error, error * error)
-//  var split: Int
+//  var split: Int = 0
 //  var parametersInOrder = true
 //  
 //  // Try four iterations
@@ -59,8 +59,8 @@
 //  // Fitting failed -- split at max error point and fit recursively
 //  // TODO
 //  var tanCenter = points[split - 1] - points[split + 1]
-//  //fit_cubic(segments, error, first, split, tan1, tanCenter)
-//  //fit_cubic(segments, error, split, last, tanCenter.negate(), tan2)
+//  fit_cubic(segments, error, first, split, tan1, tanCenter)
+//  fit_cubic(segments, error, split, last, tanCenter.negate(), tan2)
 //}
 //
 //func generate_bezier(_ points: [CGVector], _ uPrime: [CGFloat], _ first: Int, _ last: Int, _ tan1: CGVector, _ tan2: CGVector) -> [CGVector] {

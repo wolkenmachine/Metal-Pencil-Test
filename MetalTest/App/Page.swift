@@ -72,6 +72,8 @@ class MorphableBezier {
   var points: [CGVector]
   var color: Color
   
+  var control_points: [[CGVector]]
+  
   init(a: CGVector, b: CGVector, c: CGVector, d: CGVector, points: [CGVector], color: Color){
     self.a = a
     self.b = b
@@ -79,6 +81,20 @@ class MorphableBezier {
     self.d = d
     self.points = points
     self.color = color
+    
+    print("curvify")
+    control_points = FitCurve(points: points, error: 100.0)
+  }
+  
+  func recompute_curve(){
+    points = []
+    for segment in control_points {
+      for i in 0...100 {
+        let t = CGFloat(i) / 100
+        let pt = bezierQ(segment, t)
+        points.append(pt)
+      }
+    }
   }
 }
 
@@ -123,6 +139,41 @@ class EndControlPoint: ControlPoint {
     }
   }
 }
+
+class BezierControlPoint: ControlPoint {
+  var curve: MorphableBezier
+  var pos: CGVector
+  var segment_index: Int
+  var point_index: Int
+  
+  init(curve: MorphableBezier, segment_index: Int, point_index: Int){
+    self.curve = curve
+    self.segment_index = segment_index
+    self.point_index = point_index
+    self.pos = curve.control_points[segment_index][point_index]
+  }
+  
+  func grab(_ pos: CGVector) {
+    
+  }
+  
+  func move(_ pos: CGVector){
+    self.pos = pos
+    curve.control_points[segment_index][point_index] = pos
+    
+    if point_index == 3 && segment_index < curve.control_points.count - 1 {
+      curve.control_points[segment_index+1][0] = pos
+    }
+    
+    if point_index == 0 && segment_index > 0 {
+      curve.control_points[segment_index-1][3] = pos
+    }
+    
+    curve.recompute_curve()
+  }
+}
+
+
 
 class ClusterControlPoint: ControlPoint {
   var pos: CGVector
@@ -254,6 +305,7 @@ class Page {
   
   var control_points: [ControlPoint] = []
   var end_control_points: [EndControlPoint] = []
+  var bezier_control_points: [BezierControlPoint] = []
   var cluster_control_points: [ClusterControlPoint] = []
   var intersection_control_points: [IntersectionControlPoint] = []
   
@@ -353,6 +405,8 @@ class Page {
     // Find all control points
     
     end_control_points = []
+    bezier_control_points = []
+    
     var lines: [MorphableLine] = []
     
     for stroke in morphable_strokes {
@@ -365,13 +419,26 @@ class Page {
         end_control_points.append(b)
         lines.append(line)
       }
+      
+      if case let .Bezier(curve) = stroke {
+        for i in 0..<curve.control_points.count {
+          let a = BezierControlPoint(curve: curve, segment_index: i, point_index: 0)
+          let b = BezierControlPoint(curve: curve, segment_index: i, point_index: 1)
+          let c = BezierControlPoint(curve: curve, segment_index: i, point_index: 2)
+          let d = BezierControlPoint(curve: curve, segment_index: i, point_index: 3)
+          bezier_control_points.append(a)
+          bezier_control_points.append(b)
+          bezier_control_points.append(c)
+          bezier_control_points.append(d)
+        }
+      }
     }
     
     cluster_control_points = generate_cluster_control_points(end_control_points)
     intersection_control_points = intersect_lines(lines)
     
     // Cluster control points
-    control_points = (intersection_control_points as [ControlPoint] + cluster_control_points as [ControlPoint])
+    control_points = (intersection_control_points as [ControlPoint] + cluster_control_points as [ControlPoint] + bezier_control_points as [ControlPoint])
    
     // Construct a graph from clusters and intersections
     let graph = ConnectivityGraph()
@@ -445,6 +512,20 @@ class Page {
   func render_control_points(_ renderer: Renderer){
     for cp in control_points {
       renderer.addShapeData(circleShape(pos: cp.pos, radius: 4.0, resolution: 8, color: GUIDE_COLOR))
+    }
+    
+    for line in morphable_strokes {
+      if case let .Bezier(curve) = line {
+        for cpts in curve.control_points {
+//          renderer.addShapeData(circleShape(pos: cpts[0], radius: 4.0, resolution: 8, color: GUIDE_COLOR))
+//          renderer.addShapeData(circleShape(pos: cpts[1], radius: 3.0, resolution: 8, color: GUIDE_COLOR))
+//          renderer.addShapeData(circleShape(pos: cpts[2], radius: 3.0, resolution: 8, color: GUIDE_COLOR))
+//          renderer.addShapeData(circleShape(pos: cpts[3], radius: 4.0, resolution: 8, color: GUIDE_COLOR))
+          renderer.addShapeData(lineShape(a: cpts[0], b: cpts[1], weight: 1.0, color: GUIDE_COLOR))
+          renderer.addShapeData(lineShape(a: cpts[2], b: cpts[3], weight: 1.0, color: GUIDE_COLOR))
+        }
+        
+      }
     }
 //
 //    for ip in intersection_points {
