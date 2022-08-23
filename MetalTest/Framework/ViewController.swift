@@ -15,6 +15,7 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
   
   var renderer: Renderer!
   var multiGestureRecognizer: MultiGestureRecognizer!
+  var active_touches: ActiveTouches!
   var debugInfo: UITextView!
   var previousFrameTime: Date = Date()
   
@@ -31,6 +32,8 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
     multiGestureRecognizer.delegate = self
     multiGestureRecognizer.viewRef = self
     metalView.addGestureRecognizer(multiGestureRecognizer)
+    
+    active_touches = ActiveTouches()
     
     // Load Renderer
     renderer = Renderer(metalView: metalView)
@@ -49,7 +52,8 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
   
   func update(){
     // Update call
-    app.update(touches: multiGestureRecognizer.buffer)
+    active_touches.update(touches: multiGestureRecognizer.buffer)
+    app.update(touch_events: multiGestureRecognizer.buffer, active_touches: active_touches)
     
     // Calculate frame rate
     let dt = Date().timeIntervalSince(previousFrameTime)

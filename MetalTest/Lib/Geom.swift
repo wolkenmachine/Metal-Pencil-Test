@@ -186,6 +186,7 @@ func resample_stroke_equidistant(_ stroke:[CGVector], lengths: [CGFloat], step: 
   let total_length = lengths[lengths.count-1]
 
   var resampled_points: [CGVector] = []
+  var resampled_weights: [CGFloat] = []
   
   var i: CGFloat = 0;
   while i < total_length {

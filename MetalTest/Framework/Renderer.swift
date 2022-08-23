@@ -30,13 +30,10 @@ class Renderer: NSObject {
   var computePipelineState: MTLComputePipelineState!
   
   // Buffers
-  var pointBuffer: MTLBuffer!
-  var pointVertexBuffer: MTLBuffer!
-  
-  var vertexBuffer: MTLBuffer!
-  var indexBuffer: MTLBuffer!
-  
-  
+  var pointBuffer: MTLBuffer!       // Stroke points are passed through here
+  var pointVertexBuffer: MTLBuffer! // Compute shader stroke geometry arrives in this buffer
+  var vertexBuffer: MTLBuffer!      // Vertexes for other geometry
+  var indexBuffer: MTLBuffer!       // Indecies for other geometry
   
   // Buffer sizes for rendering
   var vertexBufferSize = 0;
@@ -49,6 +46,8 @@ class Renderer: NSObject {
     var screen_height: Float = Float(UIScreen.main.bounds.height)
   }
   var constants = Constants()
+  
+  var ciContext = CIContext()
   
   // Init function
   init(metalView: MTKView) {
@@ -66,7 +65,6 @@ class Renderer: NSObject {
     metalView.preferredFramesPerSecond = 120
     metalView.clearColor = MTLClearColor(red: 0.9921568627, green: 0.9882352941, blue: 0.9843137255, alpha: 1.0) // Off white
     metalView.sampleCount = MSAA
-    
   }
   
   private func createBuffers(){

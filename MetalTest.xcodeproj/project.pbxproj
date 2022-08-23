@@ -24,14 +24,16 @@
 		1F8BE5CD288AB3FC0035BF93 /* Graph.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8BE5CC288AB3FC0035BF93 /* Graph.swift */; };
 		1F8BE5CF289189920035BF93 /* ColorPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F8BE5CE289189920035BF93 /* ColorPicker.swift */; };
 		1FA2CB4F2862091900D06E38 /* CGVectorExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA2CB4E2862091800D06E38 /* CGVectorExtensions.swift */; };
+		1FB0A4E628AE59CA00D29342 /* ActiveTouches.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB0A4E528AE59CA00D29342 /* ActiveTouches.swift */; };
+		1FB0A4E828AE5A0C00D29342 /* PseudoMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB0A4E728AE5A0C00D29342 /* PseudoMode.swift */; };
+		1FB0A4EB28AE5B0700D29342 /* Canvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB0A4EA28AE5B0700D29342 /* Canvas.swift */; };
+		1FB0A4ED28AE5D4600D29342 /* StrokeCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB0A4EC28AE5D4600D29342 /* StrokeCapture.swift */; };
+		1FB0A4EF28AE6FFF00D29342 /* Stroke.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB0A4EE28AE6FFF00D29342 /* Stroke.swift */; };
 		1FC632A92894180B00DF15ED /* FitCurve.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FC632A82894180B00DF15ED /* FitCurve.swift */; };
 		1FD8E5C5286F3117002EA9DE /* TransformMatrix.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD8E5C4286F3117002EA9DE /* TransformMatrix.swift */; };
 		1FE37ABE2860ACA900DBE6F4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE37ABD2860ACA900DBE6F4 /* AppDelegate.swift */; };
 		1FE37AC02860ACA900DBE6F4 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE37ABF2860ACA900DBE6F4 /* SceneDelegate.swift */; };
 		1FE37AC22860ACA900DBE6F4 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE37AC12860ACA900DBE6F4 /* ViewController.swift */; };
-		1FE37AC52860ACA900DBE6F4 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1FE37AC32860ACA900DBE6F4 /* Main.storyboard */; };
-		1FE37AC72860ACAB00DBE6F4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1FE37AC62860ACAB00DBE6F4 /* Assets.xcassets */; };
-		1FE37ACA2860ACAB00DBE6F4 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1FE37AC82860ACAB00DBE6F4 /* LaunchScreen.storyboard */; };
 		1FE37AD22860B3E900DBE6F4 /* Renderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE37AD12860B3E900DBE6F4 /* Renderer.swift */; };
 		1FE37AD42860B61000DBE6F4 /* Shader.metal in Sources */ = {isa = PBXBuildFile; fileRef = 1FE37AD32860B61000DBE6F4 /* Shader.metal */; };
 		1FE37AD62860C7AB00DBE6F4 /* MultiGestureRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FE37AD52860C7AB00DBE6F4 /* MultiGestureRecognizer.swift */; };
@@ -56,6 +58,11 @@
 		1F8BE5CE289189920035BF93 /* ColorPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorPicker.swift; sourceTree = "<group>"; };
 		1FA2CB4E2862091800D06E38 /* CGVectorExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CGVectorExtensions.swift; sourceTree = "<group>"; };
 		1FA2CB5228648F6E00D06E38 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		1FB0A4E528AE59CA00D29342 /* ActiveTouches.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveTouches.swift; sourceTree = "<group>"; };
+		1FB0A4E728AE5A0C00D29342 /* PseudoMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PseudoMode.swift; sourceTree = "<group>"; };
+		1FB0A4EA28AE5B0700D29342 /* Canvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Canvas.swift; sourceTree = "<group>"; };
+		1FB0A4EC28AE5D4600D29342 /* StrokeCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StrokeCapture.swift; sourceTree = "<group>"; };
+		1FB0A4EE28AE6FFF00D29342 /* Stroke.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stroke.swift; sourceTree = "<group>"; };
 		1FC632A82894180B00DF15ED /* FitCurve.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FitCurve.swift; sourceTree = "<group>"; };
 		1FD8E5C4286F3117002EA9DE /* TransformMatrix.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransformMatrix.swift; sourceTree = "<group>"; };
 		1FE37ABA2860ACA900DBE6F4 /* MetalTest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MetalTest.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -85,12 +92,16 @@
 		1F8BE5BD28897D670035BF93 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				1FB0A4EC28AE5D4600D29342 /* StrokeCapture.swift */,
+				1FB0A4EA28AE5B0700D29342 /* Canvas.swift */,
 				1F8BE5BB28897C750035BF93 /* DrawingStroke.swift */,
 				1F8BE5B9288974050035BF93 /* App.swift */,
 				1F8BE5C028898B210035BF93 /* Page.swift */,
 				1F8BE5C228899D4B0035BF93 /* Guide.swift */,
 				1F8BE5CC288AB3FC0035BF93 /* Graph.swift */,
 				1F8BE5CE289189920035BF93 /* ColorPicker.swift */,
+				1FB0A4E728AE5A0C00D29342 /* PseudoMode.swift */,
+				1FB0A4EE28AE6FFF00D29342 /* Stroke.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -105,6 +116,7 @@
 				1FE37ABF2860ACA900DBE6F4 /* SceneDelegate.swift */,
 				1FE37AC12860ACA900DBE6F4 /* ViewController.swift */,
 				1FE37ABD2860ACA900DBE6F4 /* AppDelegate.swift */,
+				1FB0A4E528AE59CA00D29342 /* ActiveTouches.swift */,
 			);
 			path = Framework;
 			sourceTree = "<group>";
@@ -217,9 +229,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1FE37ACA2860ACAB00DBE6F4 /* LaunchScreen.storyboard in Resources */,
-				1FE37AC72860ACAB00DBE6F4 /* Assets.xcassets in Resources */,
-				1FE37AC52860ACA900DBE6F4 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -232,11 +241,16 @@
 			files = (
 				1FA2CB4F2862091900D06E38 /* CGVectorExtensions.swift in Sources */,
 				1F8BE5C72889AA850035BF93 /* Shapes.swift in Sources */,
+				1FB0A4E828AE5A0C00D29342 /* PseudoMode.swift in Sources */,
 				1FE37AD22860B3E900DBE6F4 /* Renderer.swift in Sources */,
 				1F8BE5C128898B220035BF93 /* Page.swift in Sources */,
 				1FE37AC22860ACA900DBE6F4 /* ViewController.swift in Sources */,
+				1FB0A4ED28AE5D4600D29342 /* StrokeCapture.swift in Sources */,
+				1FB0A4EF28AE6FFF00D29342 /* Stroke.swift in Sources */,
 				1F8BE5BC28897C750035BF93 /* DrawingStroke.swift in Sources */,
+				1FB0A4EB28AE5B0700D29342 /* Canvas.swift in Sources */,
 				1F45A6692865F39400C649D7 /* Drawing.swift in Sources */,
+				1FB0A4E628AE59CA00D29342 /* ActiveTouches.swift in Sources */,
 				1F8BE5B828896E690035BF93 /* Color.swift in Sources */,
 				1F8BE5CF289189920035BF93 /* ColorPicker.swift in Sources */,
 				1F8BE5C52889A8A40035BF93 /* Geom.swift in Sources */,
