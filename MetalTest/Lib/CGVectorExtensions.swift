@@ -98,6 +98,10 @@ public extension CGVector {
     let s = sin(angle)
     return CGVector(dx: self.dx*c - self.dy*s, dy: self.dx*s + self.dy*c)
   }
+  
+  func sum() -> CGFloat {
+    return self.dx + self.dy
+  }
 
 }
 
@@ -198,6 +202,20 @@ public func dot(_ a: CGVector, _ b: CGVector) -> CGFloat {
   return a.dx * b.dx + a.dy * b.dy
 }
 
-//public func cross(_ a: CGVector, _ b: CGVector) -> CGFloat {
-//  
-//}
+public func distance(_ a: CGVector, _ b: CGVector) -> CGFloat {
+  return (a - b).length()
+}
+
+public func scalar_projection(p:CGVector, a:CGVector, b:CGVector) -> CGVector{
+  let ap = p - a
+  let ab = (b - a).normalized()
+  let f = ab * dot(ap, ab)
+  return a + f
+}
+
+// This is not a "real" cross product, but it's very useful for calculating orientation
+// In a 3d cross product, If the input z's are 0, the output x & y components will both be zero
+// This returns the z component in a 3d vector cross product
+public func cross(_ a: CGVector, _ b: CGVector) -> CGFloat {
+  return a.dx*b.dy - a.dy*b.dx
+}

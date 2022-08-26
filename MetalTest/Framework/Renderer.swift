@@ -12,7 +12,7 @@ struct Vertex {
   var color: SIMD4<Float>
 }
 
-struct Geometry {
+struct Shape {
   var verts: [Vertex]
   var indices: [UInt16]
 }
@@ -149,16 +149,15 @@ class Renderer: NSObject {
 
   // Copy new elements into buffer
   // TODO auto grow buffer size if we overflow
-  public func addGeometry(geometry: Geometry) {
-    
+  public func addShapeData(_ shape: Shape) {
     // Copy verts
     let vertexByteOffset = MemoryLayout<Vertex>.stride * vertexBufferSize
-    (vertexBuffer.contents() + vertexByteOffset).copyMemory(from: geometry.verts, byteCount: geometry.verts.count * MemoryLayout<Vertex>.stride)
+    (vertexBuffer.contents() + vertexByteOffset).copyMemory(from: shape.verts, byteCount: shape.verts.count * MemoryLayout<Vertex>.stride)
     
     
     
     // Offset indicies by bufferSize
-    let indices = geometry.indices.map { $0 + UInt16(vertexBufferSize) }
+    let indices = shape.indices.map { $0 + UInt16(vertexBufferSize) }
     
     // Copy indicies
     let indexByteOffset = MemoryLayout<UInt16>.stride * indexBufferSize
@@ -166,8 +165,8 @@ class Renderer: NSObject {
     
     
     // Increase buffer sizes
-    vertexBufferSize += geometry.verts.count
-    indexBufferSize += geometry.indices.count
+    vertexBufferSize += shape.verts.count
+    indexBufferSize += shape.indices.count
   }
   
   public func loadStrokes(data: [Vertex]) {
@@ -175,7 +174,7 @@ class Renderer: NSObject {
     pointBufferSize = data.count
   }
   
-  public func addStrokeData(data: [Vertex]) {
+  public func addStrokeData(_ data: [Vertex]) {
     let byteOffset = MemoryLayout<Vertex>.stride * pointBufferSize
     (pointBuffer.contents() + byteOffset).copyMemory(from: data, byteCount: data.count * MemoryLayout<Vertex>.stride)
     pointBufferSize += data.count
@@ -193,7 +192,7 @@ extension Renderer: MTKViewDelegate {
             return
           }
     
-    viewRef.draw()
+    viewRef.update()
     
     // Prepare commandBuffer
     let commandBuffer = commandQueue.makeCommandBuffer()!
@@ -221,17 +220,20 @@ extension Renderer: MTKViewDelegate {
     let commandEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: descriptor)!
     commandEncoder.setRenderPipelineState(pipelineState)
 
-    // Draw calls
-    if pointBufferSize>2 {
-      commandEncoder.setVertexBytes(&constants, length: MemoryLayout<Constants>.stride, index: 1)
-      commandEncoder.setVertexBuffer(pointVertexBuffer, offset: 0, index: 0)
-      commandEncoder.drawPrimitives(type: MTLPrimitiveType.triangleStrip, vertexStart: 0, vertexCount: pointBufferSize*2-2)
-
-    }
+    commandEncoder.setVertexBytes(&constants, length: MemoryLayout<Constants>.stride, index: 1)
     
+    // Draw calls
+    
+    // Draw shapes
     if indexBufferSize > 0 {
       commandEncoder.setVertexBuffer(vertexBuffer, offset: 0, index: 0)
       commandEncoder.drawIndexedPrimitives(type: .triangle, indexCount: indexBufferSize, indexType: .uint16, indexBuffer: indexBuffer, indexBufferOffset: 0)
+    }
+    
+    // Draw lines
+    if pointBufferSize>2 {
+      commandEncoder.setVertexBuffer(pointVertexBuffer, offset: 0, index: 0)
+      commandEncoder.drawPrimitives(type: MTLPrimitiveType.triangleStrip, vertexStart: 0, vertexCount: pointBufferSize*2-2)
     }
     
     
